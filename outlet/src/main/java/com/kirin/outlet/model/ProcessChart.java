@@ -11,20 +11,36 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.Set;
 
+/**
+ * Технологическая карта
+ */
 @Entity
 @Data
 public class ProcessChart {
 
+    /**
+     * Уникальный идентификатор техкарты
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Описание приготовления, не обязательное поле
+     */
     @Column(columnDefinition = "text")
     private String description;
 
+    /**
+     * Выход в граммах
+     */
     @Column(nullable = false, columnDefinition = "decimal(5,1)")
     private BigDecimal yield;
 
+    /**
+     * Список рецептурных компонентов. Двунаправленная связь OneToMany для получения списка
+     * рецептурных компонентов и их количества
+     */
     @OneToMany(mappedBy="processChart")
     private Set<RecipeComposition> recipeCompositions;
 }
