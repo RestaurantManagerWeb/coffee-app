@@ -31,10 +31,10 @@ public class Ingredient {
 
     /**
      * Позиция на складе. Однонаправленная связь ManyToOne с сущностью склада.
+     * Может быть null у ингредиентов с неучитываемым расходом, например, вода, лед.
      */
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "stock_item_id", nullable = false,
-            foreignKey = @ForeignKey(name = "ingredient_siid_fk"))
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stock_item_id", foreignKey = @ForeignKey(name = "ingredient_siid_fk"))
     private StockItem stockItem;
 
     /**

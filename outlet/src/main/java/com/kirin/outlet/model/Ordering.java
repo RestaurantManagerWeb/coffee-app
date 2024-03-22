@@ -37,7 +37,7 @@ public class Ordering {
     private Timestamp cancelledOn;
 
     /**
-     * Уникальный идентификатор чека, сформированного в другом сервисе
+     * Уникальный идентификатор чека, сформированного в другом сервисе, может быть null
      */
     private Long receiptId;
 

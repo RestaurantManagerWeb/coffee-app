@@ -2,6 +2,7 @@ package com.kirin.outlet.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 
@@ -32,16 +33,18 @@ public class MenuItem {
     private BigDecimal price;
 
     /**
-     * НДС в %
+     * НДС в %. По умолчанию 10%
      */
+    @ColumnDefault(value = "10")
     @Column(nullable = false, columnDefinition = "tinyint")
     private Integer vat;
 
     /**
      * Добавлена ли позиция в стоп-лист. По умолчанию false
      */
+    @ColumnDefault(value = "false")
     @Column(nullable = false)
-    private Boolean inStopList = false;
+    private Boolean inStopList;
 
     /**
      * Группа меню. Однонаправленная связь ManyToOne с сущностью группы меню.
@@ -49,7 +52,6 @@ public class MenuItem {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "menu_group_id", nullable = false,
             foreignKey = @ForeignKey(name = "menu_item_mgid_fk"))
-    // @JsonIgnore
     private MenuGroup menuGroup;
 
     /**
