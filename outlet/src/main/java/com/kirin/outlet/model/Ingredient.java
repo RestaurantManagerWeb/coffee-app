@@ -1,5 +1,6 @@
 package com.kirin.outlet.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -26,13 +27,14 @@ public class Ingredient {
     /**
      * Процент потерь при обработке
      */
-    @Column(nullable = false, columnDefinition = "tinyint")
+    @Column(nullable = false, columnDefinition = "smallint")
     private Integer weightLoss;
 
     /**
      * Позиция на складе. Однонаправленная связь ManyToOne с сущностью склада.
      * Может быть null у ингредиентов с неучитываемым расходом, например, вода, лед.
      */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stock_item_id", foreignKey = @ForeignKey(name = "ingredient_siid_fk"))
     private StockItem stockItem;
@@ -40,6 +42,7 @@ public class Ingredient {
     /**
      * Метод обработки. Однонаправленная связь ManyToOne с сущностью матода обработки.
      */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "processing_method_id", nullable = false,
             foreignKey = @ForeignKey(name = "ingredient_pmid_fk"))

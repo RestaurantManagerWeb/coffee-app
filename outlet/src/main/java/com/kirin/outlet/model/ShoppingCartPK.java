@@ -1,33 +1,38 @@
 package com.kirin.outlet.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Составной первичный ключ для ShoppingCart
  */
 @Embeddable
 @Data
+@NoArgsConstructor
 public class ShoppingCartPK {
 
     /**
-     * Позиция меню. Однонаправленная связь ManyToOne с сущностью позиции меню
+     * Конструктор для задания идентификаторов позиции меню и заказа
+     * @param orderingId уникальный идентификатор связанной позиции меню
+     * @param menuItemId уникальный идентификатор связанного заказа
      */
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "menu_item_id", nullable = false,
-            foreignKey = @ForeignKey(name = "shopping_cart_miid_fk"))
-    private MenuItem menuItem;
+    public ShoppingCartPK(Long orderingId, Long menuItemId) {
+        this.orderingId = orderingId;
+        this.menuItemId = menuItemId;
+    }
 
     /**
-     * Данные о заказе. Двунаправленная связь ManyToOne с сущностью заказа
+     * Уникальный идентификатор связанной позиции меню
      */
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ordering_id", nullable = false,
-            foreignKey = @ForeignKey(name = "shopping_cart_oid_fk"))
-    private Ordering ordering;
+    @Column(name = "menu_item_id", nullable = false)
+    private Long menuItemId;
+
+    /**
+     * Уникальный идентификатор связанного заказа
+     */
+    @Column(name = "ordering_id", nullable = false)
+    private Long orderingId;
 
 }

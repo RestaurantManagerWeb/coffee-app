@@ -1,5 +1,7 @@
 package com.kirin.outlet.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -32,6 +34,7 @@ public class RecipeComposition {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "process_chart_id", nullable = false,
             foreignKey = @ForeignKey(name = "recipe_composition_pcid_fk"))
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private ProcessChart processChart;
 
     /**
@@ -40,6 +43,7 @@ public class RecipeComposition {
      * Значения могут повторяться. Если сущность рецептурного компонента
      * связана с полуфабрикатом, то данная связь должна быть null.
      */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY) // optional = true
     @JoinColumn(name = "ingredient_id",
             foreignKey = @ForeignKey(name = "recipe_composition_iid_fk"))
@@ -51,6 +55,7 @@ public class RecipeComposition {
      * Значения могут повторяться. Если сущность рецептурного компонента
      * связана с ингредиентом, то данная связь должна быть null.
      */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY) // optional = true
     @JoinColumn(name = "semi_finished_id",
             foreignKey = @ForeignKey(name = "recipe_composition_sfid_fk"))

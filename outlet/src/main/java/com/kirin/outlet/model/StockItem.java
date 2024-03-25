@@ -1,5 +1,6 @@
 package com.kirin.outlet.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -38,6 +39,7 @@ public class StockItem {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "unit_measure_id", nullable = false,
             foreignKey = @ForeignKey(name = "stock_item_umid_fk"))
+    @JsonIgnore
     private UnitMeasure unitMeasure;
 
 }

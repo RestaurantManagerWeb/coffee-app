@@ -1,5 +1,7 @@
 package com.kirin.outlet.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
@@ -36,7 +38,7 @@ public class MenuItem {
      * НДС в %. По умолчанию 10%
      */
     @ColumnDefault(value = "10")
-    @Column(nullable = false, columnDefinition = "tinyint")
+    @Column(nullable = false, columnDefinition = "smallint")
     private Integer vat;
 
     /**
@@ -49,6 +51,7 @@ public class MenuItem {
     /**
      * Группа меню. Однонаправленная связь ManyToOne с сущностью группы меню.
      */
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "menu_group_id", nullable = false,
             foreignKey = @ForeignKey(name = "menu_item_mgid_fk"))
@@ -60,6 +63,8 @@ public class MenuItem {
      * Каждое указанное значение должно быть уникальным. Если сущность позиции меню
      * связана с технологической картой, то данная связь должна быть null.
      */
+    // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY) // optional = true, unique
     @JoinColumn(name = "stock_item_id", foreignKey = @ForeignKey(name = "menu_item_siid_fk"))
     private StockItem stockItem;
@@ -70,6 +75,8 @@ public class MenuItem {
      * Каждое указанное значение должно быть уникальным. Если сущность позиции меню
      * связана с позицией на складе, то данная связь должна быть null.
      */
+    // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY) // optional = true, unique
     @JoinColumn(name = "process_chart_id", foreignKey = @ForeignKey(name = "menu_item_pcid_fk"))
     private ProcessChart processChart;
