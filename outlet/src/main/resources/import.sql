@@ -9,6 +9,7 @@ INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('чай черн
 INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('черника с/м', 300, 1);
 INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('черная смородина с/м', 420, 1);
 INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('сахар белый', 3400, 1);
+INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('вода газ. 0.5 л пластик', 3, 3);
 
 -- processing_method
 INSERT INTO processing_method(name, description) VALUES ('без обработки', null);
@@ -46,10 +47,12 @@ INSERT INTO recipe_composition(process_chart_id, ingredient_id, semi_finished_id
 
 -- menu_group
 INSERT INTO menu_group(name) VALUES('чай');
+INSERT INTO menu_group(name) VALUES('покупные товары');
 
 -- menu_item
 INSERT INTO menu_item(name, price, vat, in_stop_list, menu_group_id, stock_item_id, process_chart_id) VALUES('чай ягодный 300 мл', 220, DEFAULT, DEFAULT, 1, null, 1);
 INSERT INTO menu_item(name, price, vat, in_stop_list, menu_group_id, stock_item_id, process_chart_id) VALUES('чай черный 200 мл', 100, DEFAULT, DEFAULT, 1, null, 3);
+INSERT INTO menu_item(name, price, vat, in_stop_list, menu_group_id, stock_item_id, process_chart_id) VALUES('вода газ. 0.5 л пластик', 100, DEFAULT, DEFAULT, 2, 6, null);
 
 -- ordering
 INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES(NOW(), null, 1);
