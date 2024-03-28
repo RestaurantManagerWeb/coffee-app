@@ -1,7 +1,11 @@
 package com.kirin.outlet.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
@@ -35,11 +39,11 @@ public class MenuItem {
     private BigDecimal price;
 
     /**
-     * НДС в %. По умолчанию 10%
+     * НДС в %. По умолчанию 0%
      */
-    @ColumnDefault(value = "10")
+    @ColumnDefault(value = "0")
     @Column(nullable = false, columnDefinition = "smallint")
-    private Integer vat;
+    private Integer vat = 0;
 
     /**
      * Добавлена ли позиция в стоп-лист. По умолчанию false
@@ -51,7 +55,11 @@ public class MenuItem {
     /**
      * Группа меню. Однонаправленная связь ManyToOne с сущностью группы меню.
      */
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    // @JsonIgnore
+    @JsonProperty("menuGroupId")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "menu_group_id", nullable = false,
             foreignKey = @ForeignKey(name = "menu_item_mgid_fk"))
@@ -64,7 +72,10 @@ public class MenuItem {
      * связана с технологической картой, то данная связь должна быть null.
      */
     // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    @JsonIgnore
+    // @JsonIgnore
+    @JsonProperty("stockItemId")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     @OneToOne(fetch = FetchType.LAZY) // optional = true, unique
     @JoinColumn(name = "stock_item_id", foreignKey = @ForeignKey(name = "menu_item_siid_fk"))
     private StockItem stockItem;
@@ -76,7 +87,10 @@ public class MenuItem {
      * связана с позицией на складе, то данная связь должна быть null.
      */
     // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    @JsonIgnore
+    // @JsonIgnore
+    @JsonProperty("processChartId")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     @OneToOne(fetch = FetchType.LAZY) // optional = true, unique
     @JoinColumn(name = "process_chart_id", foreignKey = @ForeignKey(name = "menu_item_pcid_fk"))
     private ProcessChart processChart;

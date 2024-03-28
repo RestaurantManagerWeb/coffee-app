@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Сервис для формирования заказов
+ * Сервис для получения информации о позициях меню и формирования заказов
  */
 @Service
 @RequiredArgsConstructor
@@ -34,14 +34,39 @@ public class OrderService {
 
     private final StockService stockService;
 
+    /**
+     * Получения списка групп меню.
+     * @return список групп меню
+     */
     public List<MenuGroup> getMenuGroupsList() {
         return menuGroupRepo.findAll();
     }
 
+    /**
+     * Получение списка позиций меню в указанной группе по ID группы.
+     * @param groupId ID группы меню
+     * @return список позиций меню в группе, может быть пустым, если группа не найдена
+     */
     public List<MenuItem> getMenuItemsInGroup(Integer groupId) {
+        // TODO: сделать двунаправл связь с MenuGroup
         return menuItemRepo.findByMenuGroupId(groupId);
     }
 
+    /**
+     * Получение списка всех позиций меню.
+     * @return список позиций меню
+     */
+    public List<MenuItem> getMenuItems() {
+        return menuItemRepo.findAll();
+    }
+
+    /**
+     * Создание заказа. Транзакция. Фиксирует информацию о заказе (номер оплаченного чека,
+     * дата регистрации, пробитые позиции меню и их количество). После успешного создания заказа
+     * со склада списываются соответствующие продукты.
+     * @param orderData данные о заказе
+     * @return ID созданного заказа
+     */
     @Transactional
     public long createNewOrdering(OrderDto orderData) {
         Ordering order;
@@ -49,7 +74,7 @@ public class OrderService {
             order = orderingRepo.save(new Ordering(orderData.getReceiptId()));
         } catch (Exception e) {
             throw new IncorrectDataInDatabaseException(
-                    "Не создан заказ для чека с ID=" + orderData.getReceiptId(), e);
+                    "Не создан заказ для чека с ID = " + orderData.getReceiptId(), e);
         }
         System.out.println("Создан заказ:" + order);
 
@@ -59,7 +84,7 @@ public class OrderService {
                     new ShoppingCart(order.getId(), item.getKey(), item.getValue()));
         }
 
-        // !!!!!!!!
+        // TODO: доделать списание продуктов со склада после продажи
         stockService.writeOffProductsFromStock(orderData.getShoppingCartItems());
 
         return order.getId();

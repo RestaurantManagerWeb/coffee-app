@@ -14,7 +14,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Заказ
@@ -64,5 +64,5 @@ public class Ordering {
      */
     @OneToMany(mappedBy="ordering", fetch = FetchType.LAZY)
     @JsonIgnore
-    private Set<ShoppingCart> shoppingCarts;
+    private List<ShoppingCart> shoppingCarts;
 }

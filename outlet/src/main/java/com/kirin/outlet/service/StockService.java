@@ -34,6 +34,7 @@ public class StockService {
      * Принять поставку продуктов со склада. Если ключ в словаре ссылается на несуществующий
      * ID позиции на складе или позиция штучная, а данные по количеству включают дробную часть,
      * то данный продукт не принимается на склад, а его ID записывается и отправляется обратно.
+     *
      * @param shipment поставляемые продукты (ID продукта : количество в г, мл или шт)
      * @return список непринятых позиций, может быть пустым
      */
@@ -45,8 +46,8 @@ public class StockService {
             Optional<StockItem> sItem = stockItemRepo.findById(item.getKey());
             if (sItem.isPresent()) {
                 stockItem = sItem.get();
-                if (stockItem.getUnitMeasure().getId() == 3
-                        && item.getValue() % 1 != 0) {
+                // TODO: ссылка на магические единицы измерения
+                if (stockItem.getUnitMeasure().getId() == 3 && item.getValue() % 1 != 0) {
                     rejection.add(item.getKey());
                 } else {
                     stockItem.setQuantity(
@@ -65,37 +66,39 @@ public class StockService {
      * продукта (товара) равны 0 или меньше 0, будет отправлено уведомление. Если продукт
      * (товар) с указанным ID не будет найден, то будет выбрашено исключение
      * ItemNotFoundException.
-     * @param id идентификатор продукта (товара) на складе
+     *
+     * @param id    идентификатор продукта (товара) на складе
      * @param count количество для списания
      */
     public void writeOffProduct(Long id, Double count) {
         Optional<StockItem> sItem = stockItemRepo.findById(id);
-        if (sItem.isPresent()) {
-            sItem.get().setQuantity(
-                    sItem.get().getQuantity().subtract(BigDecimal.valueOf(count)));
-            stockItemRepo.save(sItem.get());
-            // TODO: рассылка уведомлений о проблемах со складом
-            if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) == 0) {
-                System.err.println("На складе закончилась позиция с ID = " + id
-                        + " (" + sItem.get().getName() + ")");
-            } else if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) < 0) {
-                System.err.println(
-                        new StringBuilder("Запасы позиции с ID = ")
-                                .append(id)
-                                .append(" (")
-                                .append(sItem.get().getName())
-                                .append(") меньше 0 (")
-                                .append(sItem.get().getQuantity())
-                                .append(")"));
-            }
-        } else throw new ItemNotFoundException(
-                "Не найдена позиция на складе с ID = " + id + ". Нельзя списать продукт");
+        if (sItem.isEmpty()) {
+            throw new ItemNotFoundException(
+                    "Не найдена позиция на складе с ID = " + id + ". Нельзя списать продукт");
+        }
+        sItem.get().setQuantity(
+                sItem.get().getQuantity().subtract(BigDecimal.valueOf(count)));
+        stockItemRepo.save(sItem.get());
+        // TODO: рассылка уведомлений о проблемах со складом
+        if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) == 0) {
+            System.err.printf("На складе закончилась позиция с ID = %d (%s)\n",
+                    id, sItem.get().getName());
+        } else if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) < 0) {
+            System.err.println(new StringBuilder("Запасы позиции с ID = ")
+                    .append(id)
+                    .append(" (")
+                    .append(sItem.get().getName())
+                    .append(") меньше 0 (")
+                    .append(sItem.get().getQuantity())
+                    .append(")"));
+        }
+
     }
 
     public void writeOffProductsFromStock(HashMap<Long, Integer> shoppingCartItems) {
 
         System.out.println(">>>>> Продукты съели!");
-        // TODO: доделать списание продуктов со склада после продажи
+
 
         // HashMap<Long, BigDecimal> stockItems = new HashMap<>();
         // HashMap<Long, Integer> processCharts = new HashMap<>();

@@ -1,18 +1,43 @@
 package com.kirin.outlet.model.exception;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
-@Data
+/**
+ * Информация об ошибке
+ */
+@Getter
+@ToString
+@EqualsAndHashCode
 public class ExceptionBody {
 
-    private String message;
+    /**
+     * Имя сервиса (приложения), в котором возникла ошибка
+     */
+    private final String appName;
 
-    private LocalDateTime dateTime;
+    /**
+     * Сообщение об ошибке
+     */
+    private final String message;
 
-    public ExceptionBody(String message) {
+    /**
+     * Дата создания (текущие дата и время)
+     */
+    private final LocalDateTime dateTime;
+
+    /**
+     * Конструктор для задания информации об ошибке. Фиксируется дата и время создания.
+     * @param message сообщение об ошибке
+     * @param appName имя приложения
+     */
+    public ExceptionBody(String message, String appName) {
         this.message = message;
-        this.dateTime = LocalDateTime.now();
+        this.appName = appName;
+        dateTime = LocalDateTime.now();
     }
+
 }

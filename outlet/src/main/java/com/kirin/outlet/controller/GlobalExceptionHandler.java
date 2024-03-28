@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Перехватчик и обработчик ошибок в приложении
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -20,25 +23,27 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionBody> notFoundException(ItemNotFoundException exception) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ExceptionBody(exception.getMessage()));
+                .body(new ExceptionBody(exception.getMessage(), appName));
     }
 
     @ExceptionHandler(IncorrectDataInDatabaseException.class)
-    public ResponseEntity<ExceptionBody> notFoundException(IncorrectDataInDatabaseException exception) {
+    public ResponseEntity<ExceptionBody> incorrectDataException(
+            IncorrectDataInDatabaseException exception
+    ) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ExceptionBody(
-                        "Ошибка в базе данных сервиса " + appName + ". "
-                        + exception.getMessage()));
+                .body(new ExceptionBody("Ошибка в базе данных сервиса. "
+                        + exception.getMessage(), appName));
     }
 
     @ExceptionHandler(OrderTransactionException.class)
-    public ResponseEntity<ExceptionBody> notFoundException(OrderTransactionException exception) {
+    public ResponseEntity<ExceptionBody> orderTransactionException(
+            OrderTransactionException exception
+    ) {
         // TODO: сделать обработчик для ошибки с созданием заказа
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ExceptionBody(
-                        "Ошибка в базе данных сервиса " + appName + ". "
-                        + exception.getMessage()));
+                .body(new ExceptionBody("Ошибка в базе данных сервиса. "
+                        + exception.getMessage(), appName));
     }
 }
