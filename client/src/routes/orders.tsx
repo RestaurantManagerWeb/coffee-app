@@ -93,9 +93,11 @@ function Orders() {
       </Combobox>
       <Button
         onClick={() => {
-          setOrders((prev) => [value, ...prev]);
-          setValue([]);
-          setSearch('');
+          if (value.length > 0) {
+            setOrders((prev) => [value, ...prev]);
+            setValue([]);
+            setSearch('');
+          }
         }}
       >
         Create order
