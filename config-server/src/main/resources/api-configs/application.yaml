@@ -1,0 +1,9 @@
+# Общие настройки для всех микросервисов
+spring:
+  cloud:
+    config: # level {application}-{profile}.yaml
+      profile: prod
+
+  profiles: # level application-{profile}.yaml
+    include:
+      - log

@@ -1,0 +1,20 @@
+# Настройки приложения api-gateway
+server:
+  port: 8765
+
+spring:
+  profiles:
+    include:
+      - eclient
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          # позволяет не соблюдать регистр при обращении к сервисам
+          lower-case-service-id: true
+      routes:
+        - id: outlet
+          uri: lb://outlet-service
+          predicates:
+            - Path=/cook/**,/menu/**,/outlet/**
