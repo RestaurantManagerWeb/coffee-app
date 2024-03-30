@@ -6,7 +6,7 @@
 
 ## База данных H2 (profile dev)
 
-[Пользовательский интерфейс](http://localhost:8080/h2-ui/)
+[Пользовательский интерфейс](http://localhost:8081/h2-ui/)
 
 ## Создание Docker контейнера с postgresql (profile prod)
 
@@ -25,14 +25,14 @@
 
 ## Доступные endpoints
 
-[springdoc-openapi:swagger](localhost:8080/swagger-ui/index.html)
+[springdoc-openapi:swagger](http://localhost:8081/swagger-ui/index.html)
 
-1. [/menu (GET)](http://localhost:8080/menu) - получение списка групп меню
+1. [/menu (GET)](http://localhost:8081/menu) - получение списка групп меню
 
-2. [/menu/group?id={1} (GET)](http://localhost:8080/menu/group?id=1) - получение списка
+2. [/menu/group?id={1} (GET)](http://localhost:8081/menu/group?id=1) - получение списка
    позиций меню в группе по ID группы
 
-3. [/menu/order (POST)](http://localhost:8080/menu/order) - получение ID заказа.
+3. [/menu/order (POST)](http://localhost:8081/menu/order) - получение ID заказа.
    Записать информацию о заказе в базу и рассчитать расход сырья.
    Данные: ID чека, пары "menuItemId":"quantity"
 
@@ -47,7 +47,7 @@
 }
 ```
 
-4. [/outlet/stock/shipment (PUT)](http://localhost:8080/outlet/stock/shipment) - принятие
+4. [/outlet/stock/shipment (PUT)](http://localhost:8081/outlet/stock/shipment) - принятие
    новой поставки продуктов. Данные: ID продукта на складе в outlet (StockItem, Long),
    количество в штуках (без дробной части), миллилитрах или граммах (Double).
    Возвращает список непринятых позиций (ID продукта).
@@ -60,9 +60,9 @@
 }
 ```
 
-5. [/cook (GET)](http://localhost:8080/cook) - получение списка позиций меню и полуфабрикатов,
+5. [/cook (GET)](http://localhost:8081/cook) - получение списка позиций меню и полуфабрикатов,
    для которых есть техкарта. Список разбит по группам, для каждой позиции указан ID техкарты
 
-6. [/cook/{4} (GET)](http://localhost:8080/cook/4) - получение информации о техкарте по ID ТК. Для
+6. [/cook/{4} (GET)](http://localhost:8081/cook/4) - получение информации о техкарте по ID ТК. Для
    отображения списка ингредиентов его нужно будет отсортировать по ключу (по возрастанию).
 

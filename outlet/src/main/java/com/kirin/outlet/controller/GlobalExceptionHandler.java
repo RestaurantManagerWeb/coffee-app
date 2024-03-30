@@ -2,6 +2,7 @@ package com.kirin.outlet.controller;
 
 import com.kirin.outlet.model.exception.ExceptionBody;
 import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
+import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
 import com.kirin.outlet.model.exception.OrderTransactionException;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,8 +27,17 @@ public class GlobalExceptionHandler {
                 .body(new ExceptionBody(exception.getMessage(), appName));
     }
 
+    @ExceptionHandler(IncorrectRequestDataException.class)
+    public ResponseEntity<ExceptionBody> incorrectRequestException(
+            IncorrectRequestDataException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ExceptionBody(exception.getMessage(), appName));
+    }
+
     @ExceptionHandler(IncorrectDataInDatabaseException.class)
-    public ResponseEntity<ExceptionBody> incorrectDataException(
+    public ResponseEntity<ExceptionBody> databaseException(
             IncorrectDataInDatabaseException exception
     ) {
         return ResponseEntity

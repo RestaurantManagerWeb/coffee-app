@@ -4,8 +4,11 @@ import com.kirin.outlet.model.MenuGroup;
 import com.kirin.outlet.model.MenuItem;
 import com.kirin.outlet.model.Ordering;
 import com.kirin.outlet.model.ShoppingCart;
+import com.kirin.outlet.model.ShoppingCartPK;
 import com.kirin.outlet.model.dto.OrderDto;
 import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
+import com.kirin.outlet.model.exception.IncorrectRequestDataException;
+import com.kirin.outlet.model.exception.OrderTransactionException;
 import com.kirin.outlet.repository.MenuGroupRepo;
 import com.kirin.outlet.repository.MenuItemRepo;
 import com.kirin.outlet.repository.OrderingRepo;
@@ -14,8 +17,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Сервис для получения информации о позициях меню и формирования заказов
@@ -69,24 +74,67 @@ public class OrderService {
      */
     @Transactional
     public long createNewOrdering(OrderDto orderData) {
-        Ordering order;
-        try {
-            order = orderingRepo.save(new Ordering(orderData.getReceiptId()));
-        } catch (Exception e) {
-            throw new IncorrectDataInDatabaseException(
-                    "Не создан заказ для чека с ID = " + orderData.getReceiptId(), e);
-        }
+        Ordering order = createOrdering(orderData.getReceiptId());
         System.out.println("Создан заказ:" + order);
 
-        HashMap<Long, Integer> shoppingCartItems = orderData.getShoppingCartItems();
-        for (var item : shoppingCartItems.entrySet()) {
-            shoppingCartRepo.save(
-                    new ShoppingCart(order.getId(), item.getKey(), item.getValue()));
-        }
+        saveShoppingCart(order.getId(), orderData.getShoppingCartItems());
 
         // TODO: доделать списание продуктов со склада после продажи
         stockService.writeOffProductsFromStock(orderData.getShoppingCartItems());
 
         return order.getId();
+    }
+
+    /**
+     * Проверка поступивших данных о новом заказе. Данные не должны быть пустыми,
+     * ID чека не должен быть зарегистрирован в таблице заказов, количество пробитых
+     * позиций в чеке не может быть меньше 1.
+     * @param orderData данные о новом оплаченном заказе
+     */
+    public void checkDataForCreateOrder(OrderDto orderData) {
+        if (orderData == null || orderData.getShoppingCartItems() == null
+                || orderData.getShoppingCartItems().isEmpty()) {
+            throw new IncorrectRequestDataException(
+                    "Данные для создания заказа не полные или отсутствуют");
+        }
+
+        Optional<Ordering> order = orderingRepo.findByReceiptId(orderData.getReceiptId());
+        if (order.isPresent()) {
+            throw new IncorrectRequestDataException("Для чека с ID = " + orderData.getReceiptId()
+                    + " уже ранее был создан заказ (ID = " + order.get().getId() + ")");
+        }
+
+        for (var item : orderData.getShoppingCartItems().entrySet()) {
+            if (item.getValue() <= 0)
+                throw new IncorrectRequestDataException(
+                        "Недопустимое количество позиций меню с ID = " + item.getKey()
+                                + " в заказе (" + item.getValue() + " шт.)");
+        }
+    }
+
+    /**
+     * Создание нового заказа с указанным ID чека.
+     * @param receiptId ID чека
+     * @return объект созданного заказа с присвоенным ID
+     */
+    private Ordering createOrdering(Long receiptId) {
+        try {
+            return orderingRepo.save(new Ordering(receiptId));
+        } catch (Exception e) {
+            throw new IncorrectDataInDatabaseException(
+                    "Не создан заказ для чека с ID = " + receiptId, e);
+        }
+    }
+
+    /**
+     * Сохранение информации о пробитых в заказе позициях.
+     * @param orderingId ID созданного заказа
+     * @param shoppingCartItems информация о пробитых позициях меню и их количестве
+     */
+    private void saveShoppingCart(Long orderingId, HashMap<Long, Integer> shoppingCartItems) {
+        for (var item : shoppingCartItems.entrySet()) {
+            shoppingCartRepo.save(
+                    new ShoppingCart(orderingId, item.getKey(), item.getValue()));
+        }
     }
 }
