@@ -14,7 +14,23 @@ spring:
           # позволяет не соблюдать регистр при обращении к сервисам
           lower-case-service-id: true
       routes:
-        - id: outlet
+        - id: outlet-service # -service для группировки в openapi (filter RouteDefinition)
           uri: lb://outlet-service
           predicates:
-            - Path=/cook/**,/menu/**,/outlet/**
+#            - Path=/cook/**,/menu/**,/stock/**
+            - Path=/outlet/**
+          filters:
+            - RewritePath=/outlet/(?<path>.*), /$\{path}
+
+        - id: openapi
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/v3/api-docs/**
+          filters:
+            - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: outlet
+        url: /v3/api-docs/outlet

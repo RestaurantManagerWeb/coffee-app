@@ -105,6 +105,7 @@ public class OrderService {
         }
 
         for (var item : orderData.getShoppingCartItems().entrySet()) {
+            // TODO: проверка на получение целого числа
             if (item.getValue() <= 0)
                 throw new IncorrectRequestDataException(
                         "Недопустимое количество позиций меню с ID = " + item.getKey()
