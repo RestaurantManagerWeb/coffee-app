@@ -1,0 +1,17 @@
+# Настройки приложения outlet-service
+server:
+  port: 8081
+
+spring:
+  profiles:
+    include:
+      - eclient
+    # from application-eclient.yaml and personnel-eclient.yaml if exists
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+springdoc:
+  packagesToScan: com.kirin.outlet

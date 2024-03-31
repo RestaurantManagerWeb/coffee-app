@@ -1,10 +1,6 @@
 spring:
   application:
-    name: outlet
-  profiles:
-    active:
-      - dev
+    name: outlet-service
 
-logging:
-  pattern:
-    console: "%d{HH:mm:ss} [%-5level] %clr(%-45.45logger{44}) : %msg%n"
+  config:
+    import: optional:configserver:http://localhost:8888

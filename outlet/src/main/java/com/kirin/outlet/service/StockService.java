@@ -43,6 +43,7 @@ public class StockService {
         ArrayList<Long> rejection = new ArrayList<>();
         StockItem stockItem;
         for (var item : shipment.entrySet()) {
+            // TODO: проверка на получение отрицательного количества
             Optional<StockItem> sItem = stockItemRepo.findById(item.getKey());
             if (sItem.isPresent()) {
                 stockItem = sItem.get();

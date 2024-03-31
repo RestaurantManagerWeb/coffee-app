@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/outlet/stock")
+@RequestMapping("/stock")
 @RequiredArgsConstructor
 public class StockController {
 

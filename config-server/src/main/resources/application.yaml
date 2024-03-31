@@ -1,0 +1,21 @@
+# Настройки приложения config-server
+server:
+  port: 8888
+
+spring:
+  profiles:
+    active:
+      - native
+
+  cloud:
+    config:
+      server:
+        native:
+          search-locations:
+            # Config files for all microservices
+            - classpath:/api-configs
+
+# Настройка формата отображения логов в консоли
+logging:
+  pattern:
+    console: "%d{HH:mm:ss} [%-5level] %clr(%-45.45logger{44}) : %msg%n"

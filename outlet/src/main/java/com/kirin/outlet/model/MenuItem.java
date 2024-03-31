@@ -2,8 +2,6 @@ package com.kirin.outlet.model;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
@@ -50,13 +48,12 @@ public class MenuItem {
      */
     @ColumnDefault(value = "false")
     @Column(nullable = false)
-    private Boolean inStopList;
+    private Boolean inStopList = false;
 
     /**
-     * Группа меню. Однонаправленная связь ManyToOne с сущностью группы меню.
+     * Группа меню. Однонаправленная связь ManyToOne с сущностью группы меню.<br>
+     * Отображение в Json только ID группы меню ("menuGroupId": id)
      */
-    // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    // @JsonIgnore
     @JsonProperty("menuGroupId")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
@@ -69,10 +66,9 @@ public class MenuItem {
      * Позиция на складе (опционально).
      * Однонаправленная связь OneToOne с сущностью позиции на складе.
      * Каждое указанное значение должно быть уникальным. Если сущность позиции меню
-     * связана с технологической картой, то данная связь должна быть null.
+     * связана с технологической картой, то данная связь должна быть null.<br>
+     * Отображение в Json только ID позиции на складе ("stockItemId": id/null)
      */
-    // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    // @JsonIgnore
     @JsonProperty("stockItemId")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
@@ -84,10 +80,9 @@ public class MenuItem {
      * Технологическая карта (опционально).
      * Однонаправленная связь OneToOne с сущностью технологической карты.
      * Каждое указанное значение должно быть уникальным. Если сущность позиции меню
-     * связана с позицией на складе, то данная связь должна быть null.
+     * связана с позицией на складе, то данная связь должна быть null.<br>
+     * Отображение в Json только ID техкарты ("processChartId": id/null)
      */
-    // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    // @JsonIgnore
     @JsonProperty("processChartId")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)

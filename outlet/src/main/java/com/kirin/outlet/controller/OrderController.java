@@ -7,7 +7,6 @@ import com.kirin.outlet.model.exception.ItemNotFoundException;
 import com.kirin.outlet.model.exception.OrderTransactionException;
 import com.kirin.outlet.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,14 +24,12 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    // http://localhost:8080/menu
     @GetMapping()
     public ResponseEntity<List<MenuGroup>> getMenuGroups() {
         List<MenuGroup> groups = orderService.getMenuGroupsList();
         return ResponseEntity.ok().body(groups);
     }
 
-    // http://localhost:8080/menu/group?id=1
     @GetMapping("/group")
     public ResponseEntity<List<MenuItem>> getMenuItemsInGroup(
             @RequestParam("id") Integer groupId
@@ -44,14 +41,9 @@ public class OrderController {
         return ResponseEntity.ok().body(items);
     }
 
-    // http://localhost:8080/menu/order
     @PostMapping("/order")
     public ResponseEntity<Long> createOrder(@RequestBody OrderDto orderData) {
-        if (orderData == null || orderData.getShoppingCartItems() == null
-                || orderData.getShoppingCartItems().isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
+        orderService.checkDataForCreateOrder(orderData);
         try {
             long orderId = orderService.createNewOrdering(orderData);
             return ResponseEntity.ok().body(orderId);
