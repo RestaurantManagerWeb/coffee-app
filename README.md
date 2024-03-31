@@ -31,7 +31,7 @@ Language level: 17 (SDK default)<br>
 
 ## Профили
 
-Задание профиля в файле [api-configs/application.yaml](config-server/src/main/resources/api-configs/application.yaml)
+Задание профиля в файле [api-configs/application.yaml](server/config-server/src/main/resources/api-configs/application.yaml)
 
 `spring.cloud.config.profile=dev`<br>
 `spring.cloud.config.profile=prod`
