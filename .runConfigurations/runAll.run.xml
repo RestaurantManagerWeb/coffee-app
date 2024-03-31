@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="runAll" type="CompoundRunConfigurationType">
+    <toRun name="aConfigServerApplication" type="Application" />
+    <toRun name="bEurekaServerApplication" type="Application" />
+    <toRun name="cOutletServiceApplication" type="Application" />
+    <toRun name="eApiGatewayApplication" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>
