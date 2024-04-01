@@ -6,6 +6,7 @@ import com.kirin.outlet.model.Ordering;
 import com.kirin.outlet.model.ShoppingCart;
 import com.kirin.outlet.model.ShoppingCartPK;
 import com.kirin.outlet.model.dto.OrderDto;
+import com.kirin.outlet.model.dto.ShopCartItemDto;
 import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
 import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.OrderTransactionException;
@@ -87,8 +88,9 @@ public class OrderService {
 
     /**
      * Проверка поступивших данных о новом заказе. Данные не должны быть пустыми,
-     * ID чека не должен быть зарегистрирован в таблице заказов, количество пробитых
-     * позиций в чеке не может быть меньше 1.
+     * ID чека не должен быть зарегистрирован в таблице заказов, должны быть указаны
+     * ID существующих позиций меню, количество каждой пробитой позиции в чеке не может
+     * быть меньше 1.
      * @param orderData данные о новом оплаченном заказе
      */
     public void checkDataForCreateOrder(OrderDto orderData) {
@@ -104,12 +106,14 @@ public class OrderService {
                     + " уже ранее был создан заказ (ID = " + order.get().getId() + ")");
         }
 
-        for (var item : orderData.getShoppingCartItems().entrySet()) {
-            // TODO: проверка на получение целого числа
-            if (item.getValue() <= 0)
+        for (ShopCartItemDto item : orderData.getShoppingCartItems()) {
+            if (menuItemRepo.findById(item.getMenuItemId()).isEmpty())
                 throw new IncorrectRequestDataException(
-                        "Недопустимое количество позиций меню с ID = " + item.getKey()
-                                + " в заказе (" + item.getValue() + " шт.)");
+                        "Нет позиции меню с ID = " + item.getMenuItemId());
+            if (item.getQuantity() <= 0)
+                throw new IncorrectRequestDataException(
+                        "Недопустимое количество позиций меню с ID = " + item.getMenuItemId()
+                                + " в заказе (" + item.getQuantity() + " шт.)");
         }
     }
 
@@ -132,10 +136,10 @@ public class OrderService {
      * @param orderingId ID созданного заказа
      * @param shoppingCartItems информация о пробитых позициях меню и их количестве
      */
-    private void saveShoppingCart(Long orderingId, HashMap<Long, Integer> shoppingCartItems) {
-        for (var item : shoppingCartItems.entrySet()) {
+    private void saveShoppingCart(Long orderingId, List<ShopCartItemDto> shoppingCartItems) {
+        for (ShopCartItemDto item : shoppingCartItems) {
             shoppingCartRepo.save(
-                    new ShoppingCart(orderingId, item.getKey(), item.getValue()));
+                    new ShoppingCart(orderingId, item.getMenuItemId(), item.getQuantity()));
         }
     }
 }

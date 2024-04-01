@@ -6,6 +6,7 @@ import com.kirin.outlet.model.ProcessChart;
 import com.kirin.outlet.model.RecipeComposition;
 import com.kirin.outlet.model.SemiFinished;
 import com.kirin.outlet.model.StockItem;
+import com.kirin.outlet.model.dto.CookGroupDto;
 import com.kirin.outlet.model.dto.CookItemDto;
 import com.kirin.outlet.model.dto.IngredientOfRecipeDto;
 import com.kirin.outlet.model.dto.ProcessChartDto;
@@ -17,12 +18,7 @@ import com.kirin.outlet.repository.SemiFinishedRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 
 /**
@@ -58,14 +54,14 @@ public class CookingService {
     }
 
     /**
-     * Получение информации о рецептурных компонентах (РК), требующихся для приготовления по
-     * техкарте с указанным ID: ID РК (ключ), название, масса нетто РК, для п/ф - ID техкарты,
+     * Получение информации о рецептурных компонентах, требующихся для приготовления по
+     * техкарте с указанным ID: ID компонента, название, масса нетто, для п/ф - ID техкарты,
      * для ингредиента - является ли он штучным.
      * @param processChart технологическая карта
-     * @return HashMap с информацией о рецептурных компонентах
+     * @return список с информацией о рецептурных компонентах
      */
-    private Map<Long, IngredientOfRecipeDto> getRecipeCompositionInfo(ProcessChart processChart) {
-        Map<Long, IngredientOfRecipeDto> components = new HashMap<>();
+    private List<IngredientOfRecipeDto> getRecipeCompositionInfo(ProcessChart processChart) {
+        List<IngredientOfRecipeDto> components = new ArrayList<>();
         List<RecipeComposition> recipeCompositions = processChart.getRecipeCompositions();
         if (recipeCompositions.isEmpty()) {
             throw new IncorrectDataInDatabaseException(
@@ -75,44 +71,48 @@ public class CookingService {
         for (RecipeComposition item : recipeCompositions) {
             // TODO: ? проверять корректность ссылок на п/ф или ингредиент
             if (item.getSemiFinished() != null) {
-                components.put(item.getId(), new IngredientOfRecipeDto(
+                components.add(new IngredientOfRecipeDto(
+                        item.getId(),
                         item.getSemiFinished().getName(),
                         item.getNetto().doubleValue(),
                         item.getSemiFinished().getId()));
             } else {
                 stockItem = item.getIngredient().getStockItem();
-                components.put(item.getId(), new IngredientOfRecipeDto(
+                components.add(new IngredientOfRecipeDto(
+                        item.getId(),
                         item.getIngredient().getName(),
                         item.getNetto().doubleValue(),
                         stockItem != null && stockItem.getUnitMeasure().getId() == 3));
                 // TODO: ссылка на магические единицы измерения
             }
         }
+        Collections.sort(components);
         return components;
     }
 
     /**
      * Получение списка позиций меню и полуфабрикатов, для которых есть техкарта.
      * Список разбит по группам, для каждой позиции указаны имя и ID техкарты.
-     * @return HashMap с информацией о названиях групп (ключ) и списком позиций,
-     * которые готовятся на предприятии
+     * @return список с информацией о позициях, которые готовятся на предприятии
      */
-    public Map<String, ArrayList<CookItemDto>> getProductionList() {
-        Map<String, ArrayList<CookItemDto>> cookItems = new HashMap<>();
-        cookItems.put("полуфабрикаты", getListOfSemiFinishedProducts());
-        cookItems.putAll(getListOfMenuItemWithProcessChart());
+    public List<CookGroupDto> getProductionList() {
+        List<CookGroupDto> cookItems = new ArrayList<>();
+        // TODO: магические полуфабрикаты
+        cookItems.add(new CookGroupDto(
+                "полуфабрикаты", getListOfSemiFinishedProducts()));
+        cookItems.addAll(getCookGroupsWithMenuItems());
         return cookItems;
     }
 
     /**
      * Получение списка позиций меню, для которых есть техкарта.
      * Список разбит по группам меню, для каждой позиции указаны имя и ID техкарты.
-     * @return HashMap с информацией о названиях групп (ключ) и списком позиций,
+     * @return коллекция с информацией о названиях групп и списком позиций,
      * которые готовятся на предприятии
      */
-    private Map<String, ArrayList<CookItemDto>> getListOfMenuItemWithProcessChart() {
+    private Collection<CookGroupDto> getCookGroupsWithMenuItems() {
         List<MenuItem> menuItems = orderService.getMenuItems();
-        Map<Integer, ArrayList<CookItemDto>> positions = new HashMap<>();
+        Map<Integer, CookGroupDto> positions = new HashMap<>();
         Integer key;
         CookItemDto cookItem;
         for (MenuItem item : menuItems) {
@@ -120,41 +120,38 @@ public class CookingService {
                 key = item.getMenuGroup().getId();
                 cookItem = new CookItemDto(item.getName(), item.getProcessChart().getId());
                 if (positions.containsKey(key))
-                    positions.get(key).add(cookItem);
-                else positions.put(key, new ArrayList<>(Arrays.asList(cookItem)));
+                    positions.get(key).addItem(cookItem);
+                else positions.put(key, new CookGroupDto(cookItem));
             }
         }
-        return replaceMenuGroupIdWithName(positions);
+        setNamesCookGroups(positions);
+        return positions.values();
     }
 
     /**
-     * Заменяет ID группы меню соответствующим названием группы
+     * Устанавливает название группы по ID группы.
      * @param positions HashMap с ID группы меню в качестве ключей
-     * @return HashMap с названиями групп меню в качестве ключей
      */
-    private Map<String, ArrayList<CookItemDto>> replaceMenuGroupIdWithName(
-            Map<Integer, ArrayList<CookItemDto>> positions
-    ) {
+    private void setNamesCookGroups(Map<Integer, CookGroupDto> positions) {
         List<MenuGroup> menuGroups = orderService.getMenuGroupsList();
+
         HashMap<Integer, String> groupsName = new HashMap<>();
         for (MenuGroup group : menuGroups) {
             groupsName.put(group.getId(), group.getName());
         }
 
-        Map<String, ArrayList<CookItemDto>> cookItems = new HashMap<>();
-        for (var position : positions.entrySet()) {
-            cookItems.put(groupsName.get(position.getKey()), position.getValue());
+        for (var cookGroup : positions.entrySet()) {
+            cookGroup.getValue().setName(groupsName.get(cookGroup.getKey()));
         }
-        return cookItems;
     }
 
     /**
      * Получение списка всех доступных полуфабрикатов с информацией о названии и ID техкарты.
      * @return список с информацией о полуфабрикатах
      */
-    private ArrayList<CookItemDto> getListOfSemiFinishedProducts() {
+    private List<CookItemDto> getListOfSemiFinishedProducts() {
         List<SemiFinished> semiFinishedList = semiFinishedRepo.findAll();
-        ArrayList<CookItemDto> cookItems = new ArrayList<>();
+        List<CookItemDto> cookItems = new LinkedList<>();
         for (SemiFinished product : semiFinishedList) {
             cookItems.add(new CookItemDto(
                     product.getName(), product.getProcessChart().getId()));
@@ -162,15 +159,4 @@ public class CookingService {
         return cookItems;
     }
 
-    // public HashMap<Long, BigDecimal> calcNecessaryIngrForCook(
-    //         @NonNull HashMap<Long, Integer> processCharts) {
-    //     Optional<ProcessChart> processChart;
-    //     for (Long pcId : processCharts.keySet()) {
-    //         processChart = processChartRepo.findById(pcId);
-    //
-    //     }
-    //
-    //
-    //     return null;
-    // }
 }

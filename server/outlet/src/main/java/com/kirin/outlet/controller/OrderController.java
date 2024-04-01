@@ -50,6 +50,7 @@ public class OrderController {
         } catch (Exception e) {
             throw new OrderTransactionException(
                     "Ошибка создания заказа: " + orderData + ". " + e.getMessage(), e);
+                    // "Ошибка создания заказа: " + orderData + ". ", e);
         }
     }
 

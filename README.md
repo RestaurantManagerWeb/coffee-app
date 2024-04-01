@@ -70,12 +70,21 @@ Language level: 17 (SDK default)<br>
 
 ```json
 {
-  "receiptId": 5,
-  "shoppingCartItems": {
-    "1": 2,
-    "2": 1,
-    "3": 1
-  }
+   "receiptId": 5,
+   "shoppingCartItems": [
+      {
+         "menuItemId": 1,
+         "quantity": 2
+      },
+      {
+         "menuItemId": 2,
+         "quantity": 1
+      },
+      {
+         "menuItemId": 3,
+         "quantity": 1
+      }
+   ]
 }
 ```
 
@@ -85,11 +94,20 @@ Language level: 17 (SDK default)<br>
    Возвращает список непринятых позиций (ID продукта).
 
 ```json
-{
-  "1": 49,
-  "3": 215.5,
-  "6": 12
-}
+[
+   {
+      "stockItemId": 1,
+      "quantity": 49
+   },
+   {
+      "stockItemId": 3,
+      "quantity": 215.5
+   },
+   {
+      "stockItemId": 6,
+      "quantity": 12
+   }
+]
 ```
 
 5. [(GET) /cook](http://localhost:8765/outlet/cook) - получение списка позиций меню и полуфабрикатов,

@@ -1,12 +1,12 @@
 package com.kirin.outlet.model.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 
 /**
  * Информация о названии позиции меню или полуфабриката и ID техкарты
  */
-@Data
+@Getter
 @AllArgsConstructor
 public class CookItemDto {
 

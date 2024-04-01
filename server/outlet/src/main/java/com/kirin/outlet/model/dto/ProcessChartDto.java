@@ -1,11 +1,10 @@
 package com.kirin.outlet.model.dto;
 
 import com.kirin.outlet.model.ProcessChart;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Данные о техкарте и списке ингредиентов
@@ -21,8 +20,8 @@ public class ProcessChartDto {
     private ProcessChart processChart;
 
     /**
-     * Данные о рецептурном компоненте. Ключ - ID компонента, значение - информация об ингредиенте
+     * Данные о рецептурных компонентах в порядке их отображения
      */
-    private Map<Long, IngredientOfRecipeDto> components;
+    private List<IngredientOfRecipeDto> components;
 
 }

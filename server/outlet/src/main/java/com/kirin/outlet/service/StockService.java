@@ -1,6 +1,8 @@
 package com.kirin.outlet.service;
 
 import com.kirin.outlet.model.StockItem;
+import com.kirin.outlet.model.dto.ShopCartItemDto;
+import com.kirin.outlet.model.dto.StockItemDto;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
 import com.kirin.outlet.repository.IngredientRepo;
 import com.kirin.outlet.repository.ProcessingMethodRepo;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,33 +34,31 @@ public class StockService {
     private final IngredientRepo ingredientRepo;
 
     /**
-     * Принять поставку продуктов со склада. Если ключ в словаре ссылается на несуществующий
-     * ID позиции на складе или позиция штучная, а данные по количеству включают дробную часть,
+     * Принять поставку продуктов со склада. Если ID позиции ссылается на несуществующий
+     * ID позиции на складе, или передано отрицательное либо нулевое количество,
+     * или позиция штучная, а данные по количеству включают дробную часть,
      * то данный продукт не принимается на склад, а его ID записывается и отправляется обратно.
      *
      * @param shipment поставляемые продукты (ID продукта : количество в г, мл или шт)
      * @return список непринятых позиций, может быть пустым
      */
     // acceptIncomingShipmentsOfGoods
-    public ArrayList<Long> acceptIncomingInventoryShipments(Map<Long, Double> shipment) {
-        ArrayList<Long> rejection = new ArrayList<>();
+    public List<Long> acceptIncomingInventoryShipments(List<StockItemDto> shipment) {
+        List<Long> rejection = new ArrayList<>();
         StockItem stockItem;
-        for (var item : shipment.entrySet()) {
-            // TODO: проверка на получение отрицательного количества
-            Optional<StockItem> sItem = stockItemRepo.findById(item.getKey());
-            if (sItem.isPresent()) {
+        for (StockItemDto item : shipment) {
+            Optional<StockItem> sItem = stockItemRepo.findById(item.getStockItemId());
+            if (sItem.isPresent() && item.getQuantity() > 0) {
                 stockItem = sItem.get();
                 // TODO: ссылка на магические единицы измерения
-                if (stockItem.getUnitMeasure().getId() == 3 && item.getValue() % 1 != 0) {
-                    rejection.add(item.getKey());
+                if (stockItem.getUnitMeasure().getId() == 3 && item.getQuantity() % 1 != 0) {
+                    rejection.add(item.getStockItemId());
                 } else {
                     stockItem.setQuantity(
-                            stockItem.getQuantity().add(BigDecimal.valueOf(item.getValue())));
+                            stockItem.getQuantity().add(BigDecimal.valueOf(item.getQuantity())));
                     stockItemRepo.save(stockItem);
                 }
-            } else {
-                rejection.add(item.getKey());
-            }
+            } else rejection.add(item.getStockItemId());
         }
         return rejection;
     }
@@ -96,7 +97,7 @@ public class StockService {
 
     }
 
-    public void writeOffProductsFromStock(HashMap<Long, Integer> shoppingCartItems) {
+    public void writeOffProductsFromStock(List<ShopCartItemDto> shoppingCartItems) {
 
         System.out.println(">>>>> Продукты съели!");
 

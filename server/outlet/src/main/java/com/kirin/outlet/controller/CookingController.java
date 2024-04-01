@@ -1,5 +1,6 @@
 package com.kirin.outlet.controller;
 
+import com.kirin.outlet.model.dto.CookGroupDto;
 import com.kirin.outlet.model.dto.CookItemDto;
 import com.kirin.outlet.model.dto.ProcessChartDto;
 import com.kirin.outlet.service.CookingService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,7 +23,7 @@ public class CookingController {
     private final CookingService cookingService;
 
     @GetMapping
-    public ResponseEntity<Map<String, ArrayList<CookItemDto>>> getProductionList() {
+    public ResponseEntity<List<CookGroupDto>> getProductionList() {
         return ResponseEntity.ok(cookingService.getProductionList());
     }
 

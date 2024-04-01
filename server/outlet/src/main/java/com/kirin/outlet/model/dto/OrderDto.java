@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.HashMap;
+import java.util.List;
 
 /**
  * Данные для создания заказа
@@ -20,9 +20,9 @@ public class OrderDto {
     private long receiptId;
 
     /**
-     * Коллекция, в которой ключем выступает ID позиции меню, а значением - количество
-     * данной позиции в чеке в штуках (не менее 1)
+     * Список позиций в чеке: ID позиции меню и количество данной позиции в чеке в штуках
+     * (не менее 1)
      */
-    private HashMap<Long, Integer> shoppingCartItems;
+    private List<ShopCartItemDto> shoppingCartItems;
 
 }
