@@ -56,4 +56,13 @@ public class GlobalExceptionHandler {
                 .body(new ExceptionBody("Ошибка в базе данных сервиса. "
                         + exception.getMessage(), appName));
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ExceptionBody> unknownException(Exception exception) {
+        exception.printStackTrace();
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ExceptionBody("!!! Неизвестная ошибка. "
+                        + exception.getMessage(), appName));
+    }
 }

@@ -4,12 +4,11 @@ import com.kirin.outlet.model.MenuGroup;
 import com.kirin.outlet.model.MenuItem;
 import com.kirin.outlet.model.Ordering;
 import com.kirin.outlet.model.ShoppingCart;
-import com.kirin.outlet.model.ShoppingCartPK;
 import com.kirin.outlet.model.dto.OrderDto;
 import com.kirin.outlet.model.dto.ShopCartItemDto;
 import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
 import com.kirin.outlet.model.exception.IncorrectRequestDataException;
-import com.kirin.outlet.model.exception.OrderTransactionException;
+import com.kirin.outlet.model.exception.ItemNotFoundException;
 import com.kirin.outlet.repository.MenuGroupRepo;
 import com.kirin.outlet.repository.MenuItemRepo;
 import com.kirin.outlet.repository.OrderingRepo;
@@ -18,8 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.HashMap;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,25 +40,33 @@ public class OrderService {
     private final StockService stockService;
 
     /**
-     * Получения списка групп меню.
-     * @return список групп меню
+     * Получения списка групп меню, отсортированного по имени группы.
+     *
+     * @return отсортированный список групп меню
      */
     public List<MenuGroup> getMenuGroupsList() {
-        return menuGroupRepo.findAll();
+        List<MenuGroup> menuGroups = menuGroupRepo.findAll();
+        menuGroups.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
+        return menuGroups;
     }
 
     /**
-     * Получение списка позиций меню в указанной группе по ID группы.
+     * Получение отсортированного по имени позиции списка позиций меню в указанной группе
+     * по ID группы. Группа может быть пустой.
+     *
      * @param groupId ID группы меню
-     * @return список позиций меню в группе, может быть пустым, если группа не найдена
+     * @return отсортированный список позиций меню в группе, может быть пустым
      */
     public List<MenuItem> getMenuItemsInGroup(Integer groupId) {
-        // TODO: сделать двунаправл связь с MenuGroup
-        return menuItemRepo.findByMenuGroupId(groupId);
+        getMenuGroupById(groupId);
+        List<MenuItem> menuItems = menuItemRepo.findByMenuGroupId(groupId);
+        menuItems.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
+        return menuItems;
     }
 
     /**
      * Получение списка всех позиций меню.
+     *
      * @return список позиций меню
      */
     public List<MenuItem> getMenuItems() {
@@ -68,15 +75,16 @@ public class OrderService {
 
     /**
      * Создание заказа. Транзакция. Фиксирует информацию о заказе (номер оплаченного чека,
-     * дата регистрации, пробитые позиции меню и их количество). После успешного создания заказа
+     * дату регистрации, пробитые позиции меню и их количество). После успешного создания заказа
      * со склада списываются соответствующие продукты.
+     *
      * @param orderData данные о заказе
      * @return ID созданного заказа
      */
     @Transactional
     public long createNewOrdering(OrderDto orderData) {
         Ordering order = createOrdering(orderData.getReceiptId());
-        System.out.println("Создан заказ:" + order);
+        System.out.println("Создан заказ: " + order);
 
         saveShoppingCart(order.getId(), orderData.getShoppingCartItems());
 
@@ -91,6 +99,7 @@ public class OrderService {
      * ID чека не должен быть зарегистрирован в таблице заказов, должны быть указаны
      * ID существующих позиций меню, количество каждой пробитой позиции в чеке не может
      * быть меньше 1.
+     *
      * @param orderData данные о новом оплаченном заказе
      */
     public void checkDataForCreateOrder(OrderDto orderData) {
@@ -119,6 +128,7 @@ public class OrderService {
 
     /**
      * Создание нового заказа с указанным ID чека.
+     *
      * @param receiptId ID чека
      * @return объект созданного заказа с присвоенным ID
      */
@@ -133,7 +143,8 @@ public class OrderService {
 
     /**
      * Сохранение информации о пробитых в заказе позициях.
-     * @param orderingId ID созданного заказа
+     *
+     * @param orderingId        ID созданного заказа
      * @param shoppingCartItems информация о пробитых позициях меню и их количестве
      */
     private void saveShoppingCart(Long orderingId, List<ShopCartItemDto> shoppingCartItems) {
@@ -141,5 +152,90 @@ public class OrderService {
             shoppingCartRepo.save(
                     new ShoppingCart(orderingId, item.getMenuItemId(), item.getQuantity()));
         }
+    }
+
+    /**
+     * Получение заказа по его ID.
+     *
+     * @param id уникальный идентификатор заказа
+     * @return информацию о заказе и пробитых позициях
+     */
+    public Ordering getOrderingById(Long id) {
+        Optional<Ordering> order = orderingRepo.findById(id);
+        if (order.isEmpty())
+            throw new ItemNotFoundException("Заказ с ID = " + id + " не найден");
+        List<ShoppingCart> items = order.get().getShoppingCarts();
+        if (items.isEmpty())
+            throw new IncorrectDataInDatabaseException(
+                    "Для заказа с ID = " + id + " нет списка пробитых позиций");
+        return order.get();
+    }
+
+    /**
+     * Получение позиции меню по ID.
+     *
+     * @param id уникальный идентификатор позиции меню
+     * @return позицию меню с указанным ID
+     */
+    public MenuItem getMenuItemById(Long id) {
+        Optional<MenuItem> menuItem = menuItemRepo.findById(id);
+        if (menuItem.isEmpty())
+            throw new ItemNotFoundException("Позиция меню с ID = " + id + " не найдена");
+        return menuItem.get();
+    }
+
+    /**
+     * Получение группы меню по ID.
+     *
+     * @param id уникальный идентификатор группы меню
+     * @return группа меню с указанным ID
+     */
+    public MenuGroup getMenuGroupById(Integer id) {
+        Optional<MenuGroup> menuGroup = menuGroupRepo.findById(id);
+        if (menuGroup.isEmpty())
+            throw new ItemNotFoundException("Группа меню с ID = " + id + " не найдена");
+        return menuGroup.get();
+    }
+
+    /**
+     * Получение списка заказов, созданных в указанную дату. Список может быть пустым.
+     * Найденные заказы сортируются по ID в обратном порядке.
+     *
+     * @param date дата для поиска
+     * @return список найденных заказов
+     */
+    public List<Ordering> getOrderingListByDate(String date) {
+        LocalDate targetDate;
+        try {
+            targetDate = LocalDate.parse(date);
+        } catch (DateTimeParseException e) {
+            throw new IncorrectRequestDataException("Некорректный формат даты в параметре запроса");
+        }
+        return getOrdersByDate(targetDate);
+    }
+
+    /**
+     * Получение списка заказов, созданных в текущую дату. Список может быть пустым.
+     * Найденные заказы сортируются по ID в обратном порядке.
+     *
+     * @return список найденных заказов
+     */
+    public List<Ordering> getOrderingListByCurrDate() {
+        return getOrdersByDate(LocalDate.now());
+    }
+
+    /**
+     * Получение списка заказов, созданных в указанную дату. Список может быть пустым.
+     * Найденные заказы сортируются по ID в обратном порядке.
+     *
+     * @param date дата для поиска
+     * @return отсортированный список найденных заказов
+     */
+    private List<Ordering> getOrdersByDate(LocalDate date) {
+        if (date.isAfter(LocalDate.now()))
+            throw new IncorrectRequestDataException("Передана дата после текущей");
+        List<Ordering> orderings = orderingRepo.findOrdersByDate(date);
+        orderings.sort((o1, o2) -> o2.getId().compareTo(o1.getId()));
+        return orderings;
     }
 }

@@ -8,16 +8,21 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public class CookItemDto {
+public class CookMenuItemDto {
+
+    /**
+     * ID позиции меню
+     */
+    private long id;
 
     /**
      * Название позиции меню или полуфабриката
      */
-    private String itemName;
+    private String name;
 
     /**
      * ID техкарты
      */
-    private Long processChartId;
+    private long processChartId;
 
 }

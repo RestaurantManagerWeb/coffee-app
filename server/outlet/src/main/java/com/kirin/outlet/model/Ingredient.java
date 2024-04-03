@@ -1,6 +1,9 @@
 package com.kirin.outlet.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -34,7 +37,9 @@ public class Ingredient {
      * Позиция на складе. Однонаправленная связь ManyToOne с сущностью склада.
      * Может быть null у ингредиентов с неучитываемым расходом, например, вода, лед.
      */
-    @JsonIgnore
+    @JsonProperty("stockItemId")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stock_item_id", foreignKey = @ForeignKey(name = "ingredient_siid_fk"))
     private StockItem stockItem;
@@ -42,7 +47,9 @@ public class Ingredient {
     /**
      * Метод обработки. Однонаправленная связь ManyToOne с сущностью матода обработки.
      */
-    @JsonIgnore
+    @JsonProperty("processingMethodId")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "processing_method_id", nullable = false,
             foreignKey = @ForeignKey(name = "ingredient_pmid_fk"))

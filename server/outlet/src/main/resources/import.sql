@@ -78,15 +78,23 @@ INSERT INTO menu_item(name, price, vat, in_stop_list, menu_group_id, stock_item_
 INSERT INTO menu_item(name, price, vat, in_stop_list, menu_group_id, stock_item_id, process_chart_id) VALUES('тост с тунцом', 130, DEFAULT, DEFAULT, 3,  null, 4);
 
 -- ordering
-INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES(NOW(), null, 1);
-INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES(NOW(), null, 2);
-INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES(NOW(), null, 3);
+INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES('2024-01-15 14:22:23', null, 1);
+INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES('2024-01-15 20:22:23', null, 2);
+INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES('2024-01-18 21:22:23', null, 3);
+
+INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES(NOW(), null, 4);
+INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES(NOW(), null, 5);
+INSERT INTO ordering(created_on, cancelled_on, receipt_id) VALUES(NOW(), null, 6);
 
 -- shopping_cart
 INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(1, 1, 1);
-INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(2, 2, 1);
-INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(2, 1, 2);
+INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(2, 1, 1);
 INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(3, 1, 1);
+
+INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(4, 1, 1);
+INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(5, 2, 1);
+INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(5, 1, 2);
+INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(6, 1, 1);
 
 
 

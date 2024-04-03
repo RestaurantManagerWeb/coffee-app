@@ -1,7 +1,10 @@
 package com.kirin.outlet.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -31,10 +34,10 @@ public class RecipeComposition {
      * Технологическая карта, к которой относится данный компонент. Двунаправленная связь
      * ManyToOne с сущностью технологической карты.
      */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "process_chart_id", nullable = false,
             foreignKey = @ForeignKey(name = "recipe_composition_pcid_fk"))
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private ProcessChart processChart;
 
     /**
@@ -43,7 +46,9 @@ public class RecipeComposition {
      * Значения могут повторяться. Если сущность рецептурного компонента
      * связана с полуфабрикатом, то данная связь должна быть null.
      */
-    @JsonIgnore
+    @JsonProperty("ingredientId")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     @ManyToOne(fetch = FetchType.LAZY) // optional = true
     @JoinColumn(name = "ingredient_id",
             foreignKey = @ForeignKey(name = "recipe_composition_iid_fk"))
@@ -55,7 +60,9 @@ public class RecipeComposition {
      * Значения могут повторяться. Если сущность рецептурного компонента
      * связана с ингредиентом, то данная связь должна быть null.
      */
-    @JsonIgnore
+    @JsonProperty("semiFinishedId")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     @ManyToOne(fetch = FetchType.LAZY) // optional = true
     @JoinColumn(name = "semi_finished_id",
             foreignKey = @ForeignKey(name = "recipe_composition_sfid_fk"))

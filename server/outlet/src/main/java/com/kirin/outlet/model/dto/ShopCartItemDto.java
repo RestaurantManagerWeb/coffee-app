@@ -1,11 +1,13 @@
 package com.kirin.outlet.model.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
  * Данные о позиции в чеке
  */
 @Getter
+@AllArgsConstructor
 public class ShopCartItemDto {
 
     /**

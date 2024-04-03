@@ -20,8 +20,8 @@ public class ProcessChartDto {
     private ProcessChart processChart;
 
     /**
-     * Данные о рецептурных компонентах в порядке их отображения
+     * Данные о рецептурных компонентах в порядке их отображения (по возрастанию ID)
      */
-    private List<IngredientOfRecipeDto> components;
+    private List<RecipeCompositionDto> components;
 
 }

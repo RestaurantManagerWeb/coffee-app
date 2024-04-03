@@ -1,16 +1,11 @@
 package com.kirin.outlet.model.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Название группы и входящие позиции
  */
-@Getter
-@AllArgsConstructor
 public class CookGroupDto {
 
     /**
@@ -21,21 +16,15 @@ public class CookGroupDto {
     /**
      * Входящие в группу позиции, которые готовятся на предприятии
      */
-    private List<CookItemDto> items;
-
-    /**
-     * Конструктор для инициализации пустого списка позиций
-     */
-    public CookGroupDto() {
-        this.items = new LinkedList<>();
-    }
+    private List<CookMenuItemDto> items;
 
     /**
      * Конструктор для задания списка позиций с одним указанным элементом.
+     * Имя не устанавливается.
      * @param newItem позиция для добавления в список
      */
-    public CookGroupDto(CookItemDto newItem) {
-        this();
+    public CookGroupDto(CookMenuItemDto newItem) {
+        this.items = new ArrayList<>();
         addItem(newItem);
     }
 
@@ -43,7 +32,7 @@ public class CookGroupDto {
      * Добавление новой позиции в список.
      * @param item позиция для добавления в список
      */
-    public void addItem(CookItemDto item) {
+    public void addItem(CookMenuItemDto item) {
         items.add(item);
     }
 
@@ -55,4 +44,20 @@ public class CookGroupDto {
         name = nameGroup;
     }
 
+    /**
+     * Получение отсортированного по имени списка позиций меню.
+     * @return отсортированный список
+     */
+    public List<CookMenuItemDto> getItems() {
+        items.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
+        return items;
+    }
+
+    /**
+     * Получение имени группы меню
+     * @return имя группы
+     */
+    public String getName() {
+        return name;
+    }
 }
