@@ -15,11 +15,13 @@
     "@mantine/hooks": "^7.7.1",
     "@mantine/modals": "^7.7.1",
     "@tabler/icons-react": "^3.1.0",
+    "@tanstack/react-router": "^1.26.4",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.22.3"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@tanstack/router-devtools": "^1.26.4",
+    "@tanstack/router-vite-plugin": "^1.25.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.2.0",

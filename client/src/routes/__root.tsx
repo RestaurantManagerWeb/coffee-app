@@ -1,11 +1,15 @@
 import '@mantine/core/styles.css';
 import { AppShell, Burger, NavLink } from '@mantine/core';
-import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useDisclosure } from '@mantine/hooks';
+import { Link, Outlet, createRootRoute } from '@tanstack/react-router';
+
+export const Route = createRootRoute({
+  component: Root,
+  notFoundComponent: () => <div></div>,
+});
 
 function Root() {
   const [opened, { toggle }] = useDisclosure();
-  const location = useLocation();
 
   return (
     <AppShell
@@ -25,13 +29,13 @@ function Root() {
           to="/menu"
           component={Link}
           label="Menu"
-          active={location.pathname === '/menu'}
+          active={location.pathname.startsWith('/menu')}
         />
         <NavLink
           to="/orders"
           component={Link}
           label="Orders"
-          active={location.pathname === '/orders'}
+          active={location.pathname.startsWith('/orders')}
         />
       </AppShell.Navbar>
       <AppShell.Main>
@@ -40,5 +44,3 @@ function Root() {
     </AppShell>
   );
 }
-
-export default Root;

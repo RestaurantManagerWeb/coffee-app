@@ -11,6 +11,11 @@ import {
 } from '@mantine/core';
 import { useState } from 'react';
 import { menuItems } from '../test-data';
+import { createLazyFileRoute } from '@tanstack/react-router';
+
+export const Route = createLazyFileRoute('/orders')({
+  component: Orders,
+});
 
 function Orders() {
   const combobox = useCombobox({
@@ -113,5 +118,3 @@ function Orders() {
     </Stack>
   );
 }
-
-export default Orders;
