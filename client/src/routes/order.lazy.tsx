@@ -13,11 +13,11 @@ import { useState } from 'react';
 import { menuItems } from '../test-data';
 import { createLazyFileRoute } from '@tanstack/react-router';
 
-export const Route = createLazyFileRoute('/orders')({
-  component: Orders,
+export const Route = createLazyFileRoute('/order')({
+  component: Order,
 });
 
-function Orders() {
+function Order() {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
     onDropdownOpen: () => combobox.updateSelectedOptionIndex('active'),
@@ -26,7 +26,7 @@ function Orders() {
   const [search, setSearch] = useState('');
   const [value, setValue] = useState<string[]>([]);
 
-  const [orders, setOrders] = useState<string[][]>([]);
+  const [order, setOrder] = useState<string[][]>([]);
 
   const handleValueSelect = (val: string) =>
     setValue((current) =>
@@ -99,7 +99,7 @@ function Orders() {
       <Button
         onClick={() => {
           if (value.length > 0) {
-            setOrders((prev) => [value, ...prev]);
+            setOrder((prev) => [value, ...prev]);
             setValue([]);
             setSearch('');
           }
@@ -113,7 +113,7 @@ function Orders() {
         stickyHeader
         withTableBorder
         withColumnBorders
-        data={{ head: ['Items'], body: orders }}
+        data={{ head: ['Items'], body: order }}
       />
     </Stack>
   );

@@ -18,14 +18,14 @@ import { Route as MenuGroupGroupIdImport } from './routes/menu/group/$groupId'
 
 // Create Virtual Routes
 
-const OrdersLazyImport = createFileRoute('/orders')()
+const OrderLazyImport = createFileRoute('/order')()
 
 // Create/Update Routes
 
-const OrdersLazyRoute = OrdersLazyImport.update({
-  path: '/orders',
+const OrderLazyRoute = OrderLazyImport.update({
+  path: '/order',
   getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/orders.lazy').then((d) => d.Route))
+} as any).lazy(() => import('./routes/order.lazy').then((d) => d.Route))
 
 const MenuIndexRoute = MenuIndexImport.update({
   path: '/menu/',
@@ -41,8 +41,8 @@ const MenuGroupGroupIdRoute = MenuGroupGroupIdImport.update({
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/orders': {
-      preLoaderRoute: typeof OrdersLazyImport
+    '/order': {
+      preLoaderRoute: typeof OrderLazyImport
       parentRoute: typeof rootRoute
     }
     '/menu/': {
@@ -59,7 +59,7 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export const routeTree = rootRoute.addChildren([
-  OrdersLazyRoute,
+  OrderLazyRoute,
   MenuIndexRoute,
   MenuGroupGroupIdRoute,
 ])

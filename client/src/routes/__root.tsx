@@ -32,10 +32,10 @@ function Root() {
           active={location.pathname.startsWith('/menu')}
         />
         <NavLink
-          to="/orders"
+          to="/order"
           component={Link}
-          label="Orders"
-          active={location.pathname.startsWith('/orders')}
+          label="Order"
+          active={location.pathname.startsWith('/order')}
         />
       </AppShell.Navbar>
       <AppShell.Main>
