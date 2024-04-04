@@ -3,7 +3,7 @@ import { MenuItem } from '../../../types';
 import { Table, TableData } from '@mantine/core';
 
 async function fetchMenuGroup(groupId: string): Promise<MenuItem[]> {
-  const res = await fetch(`/api/outlet/menu/group?id=${groupId}`);
+  const res = await fetch(`/api/outlet/menu/group/${groupId}`);
   if (!res.ok) throw new Error(res.statusText);
   return await res.json();
 }
