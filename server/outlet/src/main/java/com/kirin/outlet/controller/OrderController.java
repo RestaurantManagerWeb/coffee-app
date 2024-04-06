@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,6 +58,16 @@ public class OrderController {
             @Parameter(name = "id", description = "Ordering id", example = "1")
             @PathVariable("id") Long id) {
         return ResponseEntity.ok(orderService.getOrderingById(id));
+    }
+
+    @Operation(summary = "Отмена заказа по ID")
+    @PostMapping("/cancel/{id}")
+    public ResponseEntity<Void> cancelOrdering(
+            @Parameter(name = "id", description = "Ordering id", example = "1")
+            @PathVariable("id") Long id
+    ) {
+        orderService.cancelOrderingById(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Operation(summary = "Получение списка созданных заказов в указанную дату",

@@ -17,7 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
@@ -237,5 +239,38 @@ public class OrderService {
         List<Ordering> orderings = orderingRepo.findOrdersByDate(date);
         orderings.sort((o1, o2) -> o2.getId().compareTo(o1.getId()));
         return orderings;
+    }
+
+    /**
+     * Отмена заказа по ID. Если заказ с указанным ID существует и не был отменен ранее,
+     * фиксируются дата и время отмены заказа и осуществляется расчет и возврат затраченных
+     * позиций на склад (транзакция).
+     *
+     * @param id уникальный идентификатор заказа
+     */
+    public void cancelOrderingById(Long id) {
+        Optional<Ordering> order = orderingRepo.findById(id);
+        if (order.isEmpty())
+            throw new ItemNotFoundException("Заказ с ID = " + id + " не найден");
+        Ordering ordering = order.get();
+        if (ordering.getCancelledAt() != null)
+            throw new IncorrectRequestDataException(
+                    "Заказ с ID = " + id + " уже был отменен " + ordering.getCancelledAt());
+        cancelOrdering(ordering);
+        // TODO: обработка ошибок транзакции
+    }
+
+    /**
+     * Внесение времени отмены заказа и возврат затраченных продуктов на склад.
+     *
+     * @param ordering объект заказа для отмены
+     */
+    @Transactional
+    private void cancelOrdering(Ordering ordering) {
+        ordering.setCancelledAt(Timestamp.valueOf(LocalDateTime.now()));
+        orderingRepo.save(ordering);
+
+        // TODO: доделать возврат продуктов на склад после отмены заказа
+        stockService.cancelWriteOffProductsFromStock(ordering.getShoppingCarts());
     }
 }

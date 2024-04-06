@@ -1,6 +1,9 @@
 package com.kirin.outlet.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -28,7 +31,9 @@ public class SemiFinished {
      * Технологическая карта.
      * Однонаправленная связь OneToOne с сущностью технологической карты.
      */
-    @JsonIgnore
+    @JsonProperty("processChartId")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "process_chart_id", unique = true, nullable = false,
             foreignKey = @ForeignKey(name = "semi_finished_pcid_fk"))

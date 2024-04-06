@@ -26,6 +26,7 @@ public class Ordering {
     /**
      * Конструктор для создания нового заказа по ID чека с заполнением текущих
      * даты и времени создания.
+     *
      * @param receiptId уникальный идентификатор чека
      */
     public Ordering(Long receiptId) {
@@ -44,23 +45,24 @@ public class Ordering {
      */
     @ColumnDefault(value = "CURRENT_TIMESTAMP")
     @Column(nullable = false, insertable = false, updatable = false)
-    private Timestamp createdOn = Timestamp.valueOf(LocalDateTime.now());
+    private Timestamp createdAt = Timestamp.valueOf(LocalDateTime.now());
 
     /**
      * Дата и время отмены заказа, может быть null
      */
-    private Timestamp cancelledOn;
+    @Column(insertable = false)
+    private Timestamp cancelledAt;
 
     /**
      * Уникальный идентификатор чека, сформированного в другом сервисе
      */
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, updatable = false)
     private Long receiptId;
 
     /**
      * Список позиций в заказе. Двунаправленная связь OneToMany для получения списка
      * позиций меню в заказе и их количества
      */
-    @OneToMany(mappedBy="ordering", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "ordering", fetch = FetchType.LAZY)
     private List<ShoppingCart> shoppingCarts;
 }

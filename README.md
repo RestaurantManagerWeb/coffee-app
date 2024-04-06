@@ -88,7 +88,7 @@ psql -U sa -d outlet_db
 }
 ```
 
-2. [(PUT) /stock/shipment](http://localhost:8765/outlet/stock/shipment) - принятие
+2. [(POST) /stock/shipment](http://localhost:8765/outlet/stock/shipment) - принятие
    новой поставки продуктов. Данные: ID продукта на складе в outlet (StockItem, Long),
    количество в штуках (без дробной части), миллилитрах или граммах (Double).
    Возвращает список непринятых позиций (ID продукта).

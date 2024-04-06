@@ -22,7 +22,7 @@ public interface OrderingRepo extends JpaRepository<Ordering, Long> {
      * @param date дата для поиска
      * @return список найденных заказов
      */
-    @Query(value = "select * from ordering o where cast(o.created_on as date) = :date",
+    @Query(value = "select * from ordering o where cast(o.created_at as date) = :date",
             nativeQuery = true)
     List<Ordering> findOrdersByDate(LocalDate date);
 }
