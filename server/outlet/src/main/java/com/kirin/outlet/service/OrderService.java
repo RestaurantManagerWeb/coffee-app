@@ -1,7 +1,5 @@
 package com.kirin.outlet.service;
 
-import com.kirin.outlet.model.MenuGroup;
-import com.kirin.outlet.model.MenuItem;
 import com.kirin.outlet.model.Ordering;
 import com.kirin.outlet.model.ShoppingCart;
 import com.kirin.outlet.model.dto.OrderDto;
@@ -9,8 +7,6 @@ import com.kirin.outlet.model.dto.ShopCartItemDto;
 import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
 import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
-import com.kirin.outlet.repository.MenuGroupRepo;
-import com.kirin.outlet.repository.MenuItemRepo;
 import com.kirin.outlet.repository.OrderingRepo;
 import com.kirin.outlet.repository.ShoppingCartRepo;
 import lombok.RequiredArgsConstructor;
@@ -31,49 +27,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final MenuItemRepo menuItemRepo;
-
-    private final MenuGroupRepo menuGroupRepo;
-
     private final OrderingRepo orderingRepo;
 
     private final ShoppingCartRepo shoppingCartRepo;
 
     private final StockService stockService;
 
-    /**
-     * Получения списка групп меню, отсортированного по имени группы.
-     *
-     * @return отсортированный список групп меню
-     */
-    public List<MenuGroup> getMenuGroupsList() {
-        List<MenuGroup> menuGroups = menuGroupRepo.findAll();
-        menuGroups.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
-        return menuGroups;
-    }
-
-    /**
-     * Получение отсортированного по имени позиции списка позиций меню в указанной группе
-     * по ID группы. Группа может быть пустой.
-     *
-     * @param groupId ID группы меню
-     * @return отсортированный список позиций меню в группе, может быть пустым
-     */
-    public List<MenuItem> getMenuItemsInGroup(Integer groupId) {
-        getMenuGroupById(groupId);
-        List<MenuItem> menuItems = menuItemRepo.findByMenuGroupId(groupId);
-        menuItems.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
-        return menuItems;
-    }
-
-    /**
-     * Получение списка всех позиций меню.
-     *
-     * @return список позиций меню
-     */
-    public List<MenuItem> getMenuItems() {
-        return menuItemRepo.findAll();
-    }
+    private final MenuService menuService;
 
     /**
      * Создание заказа. Транзакция. Фиксирует информацию о заказе (номер оплаченного чека,
@@ -118,9 +78,7 @@ public class OrderService {
         }
 
         for (ShopCartItemDto item : orderData.getShoppingCartItems()) {
-            if (menuItemRepo.findById(item.getMenuItemId()).isEmpty())
-                throw new IncorrectRequestDataException(
-                        "Нет позиции меню с ID = " + item.getMenuItemId());
+            menuService.getMenuItemById(item.getMenuItemId());
             if (item.getQuantity() <= 0)
                 throw new IncorrectRequestDataException(
                         "Недопустимое количество позиций меню с ID = " + item.getMenuItemId()
@@ -171,32 +129,6 @@ public class OrderService {
             throw new IncorrectDataInDatabaseException(
                     "Для заказа с ID = " + id + " нет списка пробитых позиций");
         return order.get();
-    }
-
-    /**
-     * Получение позиции меню по ID.
-     *
-     * @param id уникальный идентификатор позиции меню
-     * @return позицию меню с указанным ID
-     */
-    public MenuItem getMenuItemById(Long id) {
-        Optional<MenuItem> menuItem = menuItemRepo.findById(id);
-        if (menuItem.isEmpty())
-            throw new ItemNotFoundException("Позиция меню с ID = " + id + " не найдена");
-        return menuItem.get();
-    }
-
-    /**
-     * Получение группы меню по ID.
-     *
-     * @param id уникальный идентификатор группы меню
-     * @return группа меню с указанным ID
-     */
-    public MenuGroup getMenuGroupById(Integer id) {
-        Optional<MenuGroup> menuGroup = menuGroupRepo.findById(id);
-        if (menuGroup.isEmpty())
-            throw new ItemNotFoundException("Группа меню с ID = " + id + " не найдена");
-        return menuGroup.get();
     }
 
     /**
@@ -273,4 +205,5 @@ public class OrderService {
         // TODO: доделать возврат продуктов на склад после отмены заказа
         stockService.cancelWriteOffProductsFromStock(ordering.getShoppingCarts());
     }
+
 }

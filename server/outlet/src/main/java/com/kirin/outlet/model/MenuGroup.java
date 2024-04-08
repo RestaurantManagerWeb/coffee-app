@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
 
+import java.sql.Timestamp;
+
 /**
  * Группы меню. Например, кофе, чай, сэндвичи, покупные товары
  */
@@ -26,4 +28,10 @@ public class MenuGroup {
      */
     @Column(nullable = false, unique = true, columnDefinition = "VARCHAR(30)")
     private String name;
+
+    /**
+     * Дата и время удаления группы меню, может быть null
+     */
+    @Column(insertable = false)
+    private Timestamp deletedAt;
 }

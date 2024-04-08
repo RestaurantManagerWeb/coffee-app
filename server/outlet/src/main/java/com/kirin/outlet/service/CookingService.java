@@ -34,7 +34,7 @@ public class CookingService {
 
     private final RecipeCompositionRepo recipeCompositionRepo;
 
-    private final OrderService orderService;
+    private final MenuService menuService;
 
     /**
      * Получение информации о техкарте и требуемых ингредиентах.
@@ -109,7 +109,7 @@ public class CookingService {
      * @return список с информацией о позициях, которые готовятся на предприятии
      */
     public List<CookGroupDto> getProductionList() {
-        List<MenuItem> menuItems = orderService.getMenuItems();
+        List<MenuItem> menuItems = menuService.getMenuItems();
         Map<Integer, CookGroupDto> positions = new HashMap<>();
         Integer key;
         // TODO: добавлять MenuItem вместо CookMenuItemDto
@@ -136,7 +136,7 @@ public class CookingService {
      * @param positions HashMap с ID группы меню в качестве ключей
      */
     private void setNamesCookGroups(Map<Integer, CookGroupDto> positions) {
-        List<MenuGroup> menuGroups = orderService.getMenuGroupsList();
+        List<MenuGroup> menuGroups = menuService.getMenuGroupsList();
 
         HashMap<Integer, String> groupsName = new HashMap<>();
         for (MenuGroup group : menuGroups) {
