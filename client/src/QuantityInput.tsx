@@ -3,7 +3,11 @@ import { useRef } from 'react';
 
 function QuantityInput({
   onChange,
-}: Readonly<{ onChange?: (value: number | string) => void }>) {
+  value,
+}: Readonly<{
+  onChange?: (value: number | string) => void;
+  value?: string | number;
+}>) {
   const handlersRef = useRef<NumberInputHandlers>(null);
 
   return (
@@ -16,6 +20,7 @@ function QuantityInput({
         hideControls
         radius={0}
         onChange={onChange}
+        value={value}
       />
       <Button onClick={() => handlersRef.current?.increment()}>+</Button>
     </Button.Group>
