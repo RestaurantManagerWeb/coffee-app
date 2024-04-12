@@ -1,7 +1,8 @@
-import { Anchor, Card, Grid } from '@mantine/core';
+import { Anchor, Card, Grid, SimpleGrid } from '@mantine/core';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { MenuGroup } from '../../types';
 import { useEffect, useState } from 'react';
+import Order from '../../Order';
 
 export const Route = createFileRoute('/menu/')({
   component: Menu,
@@ -25,20 +26,23 @@ function Menu() {
   }, []);
 
   return (
-    <Grid>
-      {groups.map((group) => (
-        <Grid.Col key={group.id} span={3}>
-          <Anchor
-            component={Link}
-            to="/menu/group/$groupId"
-            params={{ groupId: group.id.toString() }}
-          >
-            <Card shadow="sm" padding="lg" radius="md" withBorder>
-              {group.name}
-            </Card>
-          </Anchor>
-        </Grid.Col>
-      ))}
-    </Grid>
+    <SimpleGrid cols={2}>
+      <Grid>
+        {groups.map((group) => (
+          <Grid.Col key={group.id} span={4}>
+            <Anchor
+              component={Link}
+              to="/menu/group/$groupId"
+              params={{ groupId: group.id.toString() }}
+            >
+              <Card shadow="sm" padding="lg" radius="md" withBorder>
+                {group.name}
+              </Card>
+            </Anchor>
+          </Grid.Col>
+        ))}
+      </Grid>
+      <Order />
+    </SimpleGrid>
   );
 }

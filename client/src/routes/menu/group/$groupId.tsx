@@ -2,8 +2,9 @@ import { createFileRoute } from '@tanstack/react-router';
 import { MenuItem } from '../../../types';
 import { useContext, useEffect } from 'react';
 import QuantityInput from '../../../QuantityInput';
-import { Table } from '@mantine/core';
+import { Box, SimpleGrid, Table } from '@mantine/core';
 import { OrderContext } from '../../__root';
+import Order from '../../../Order';
 
 async function fetchMenuGroup(groupId: string) {
   const res = await fetch(`/api/outlet/menu/group/${groupId}`);
@@ -12,7 +13,7 @@ async function fetchMenuGroup(groupId: string) {
 }
 
 export const Route = createFileRoute('/menu/group/$groupId')({
-  component: Group,
+  component: MenuGroup,
   beforeLoad: () => {
     return { title: `Group` };
   },
@@ -21,7 +22,7 @@ export const Route = createFileRoute('/menu/group/$groupId')({
   },
 });
 
-function Group() {
+function MenuGroup() {
   const orderData = useContext(OrderContext);
   const menuItems = Route.useLoaderData();
 
@@ -46,22 +47,27 @@ function Group() {
   ));
 
   return (
-    <Table
-      striped
-      highlightOnHover
-      stickyHeader
-      withTableBorder
-      withColumnBorders
-    >
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>ID</Table.Th>
-          <Table.Th>Name</Table.Th>
-          <Table.Th>Price</Table.Th>
-          <Table.Th></Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>{rows}</Table.Tbody>
-    </Table>
+    <SimpleGrid cols={2}>
+      <Box>
+        <Table
+          striped
+          highlightOnHover
+          stickyHeader
+          withTableBorder
+          withColumnBorders
+        >
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>ID</Table.Th>
+              <Table.Th>Name</Table.Th>
+              <Table.Th>Price</Table.Th>
+              <Table.Th></Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>{rows}</Table.Tbody>
+        </Table>
+      </Box>
+      <Order />
+    </SimpleGrid>
   );
 }

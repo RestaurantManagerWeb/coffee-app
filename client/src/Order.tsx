@@ -1,11 +1,6 @@
-import { Stack, Table, Box, Button } from '@mantine/core';
+import { Stack, Table, Button } from '@mantine/core';
 import { useContext } from 'react';
-import { createLazyFileRoute } from '@tanstack/react-router';
-import { OrderContext } from './__root';
-
-export const Route = createLazyFileRoute('/order')({
-  component: Order,
-});
+import { OrderContext } from './routes/__root';
 
 function Order() {
   const orderData = useContext(OrderContext);
@@ -24,10 +19,14 @@ function Order() {
     (async () => {
       try {
         if (!orderData?.items) return;
-        const items = Object.entries(orderData?.items).map((item) => ({
-          menuItemId: Number(item[0]),
-          quantity: item[1],
-        }));
+        const items = Object.entries(orderData?.items)
+          .filter((item) => item[1])
+          .map((item) => ({
+            menuItemId: Number(item[0]),
+            quantity: item[1],
+          }));
+
+        if (!items.length) return;
 
         const body = {
           receiptId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER),
@@ -40,8 +39,6 @@ function Order() {
           body: JSON.stringify(body),
         });
         if (!res.ok) return;
-        const data = await res.json();
-        console.log(data);
       } catch (error) {
         console.log(error);
         return;
@@ -51,6 +48,7 @@ function Order() {
 
   return (
     <Stack>
+      <Button onClick={handleCreate}>Create</Button>
       <Table
         striped
         highlightOnHover
@@ -71,8 +69,8 @@ function Order() {
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>
       </Table>
-      <Box>{JSON.stringify(orderData)}</Box>
-      <Button onClick={handleCreate}>Create</Button>
     </Stack>
   );
 }
+
+export default Order;

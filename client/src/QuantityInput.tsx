@@ -1,4 +1,10 @@
-import { Button, NumberInput, NumberInputHandlers } from '@mantine/core';
+import {
+  ActionIcon,
+  Group,
+  NumberInput,
+  NumberInputHandlers,
+} from '@mantine/core';
+import { IconMinus, IconPlus } from '@tabler/icons-react';
 import { useRef } from 'react';
 
 function QuantityInput({
@@ -11,19 +17,23 @@ function QuantityInput({
   const handlersRef = useRef<NumberInputHandlers>(null);
 
   return (
-    <Button.Group>
-      <Button onClick={() => handlersRef.current?.decrement()}>-</Button>
+    <Group>
+      <ActionIcon onClick={() => handlersRef.current?.decrement()}>
+        <IconMinus />
+      </ActionIcon>
       <NumberInput
         handlersRef={handlersRef}
         defaultValue={0}
         min={0}
         hideControls
-        radius={0}
         onChange={onChange}
         value={value}
+        flex={1}
       />
-      <Button onClick={() => handlersRef.current?.increment()}>+</Button>
-    </Button.Group>
+      <ActionIcon onClick={() => handlersRef.current?.increment()}>
+        <IconPlus />
+      </ActionIcon>
+    </Group>
   );
 }
 
