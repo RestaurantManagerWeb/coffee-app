@@ -1,4 +1,4 @@
-import { Stack, Table, Box } from '@mantine/core';
+import { Stack, Table, Box, Button } from '@mantine/core';
 import { useContext } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { OrderContext } from './__root';
@@ -19,6 +19,35 @@ function Order() {
         </Table.Tr>
       ))
     : [];
+
+  function handleCreate() {
+    (async () => {
+      try {
+        if (!orderData?.items) return;
+        const items = Object.entries(orderData?.items).map((item) => ({
+          menuItemId: Number(item[0]),
+          quantity: item[1],
+        }));
+
+        const body = {
+          receiptId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER),
+          shoppingCartItems: items,
+        };
+
+        const res = await fetch('/api/outlet/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        console.log(data);
+      } catch (error) {
+        console.log(error);
+        return;
+      }
+    })();
+  }
 
   return (
     <Stack>
@@ -43,6 +72,7 @@ function Order() {
         <Table.Tbody>{rows}</Table.Tbody>
       </Table>
       <Box>{JSON.stringify(orderData)}</Box>
+      <Button onClick={handleCreate}>Create</Button>
     </Stack>
   );
 }
