@@ -3,16 +3,17 @@ package com.kirin.outlet.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 
 /**
  * Позиция меню. Например, капучино 200 мл, капучино 300 мл
  */
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Data
 @NoArgsConstructor
@@ -20,9 +21,10 @@ public class MenuItem extends SoftDeletes {
 
     /**
      * Конструктор для создания позиции меню, связанной со штучной позицией на складе.
-     * @param name название позиции
-     * @param price цена в рублях
-     * @param vat НДС в %. По умолчанию 0%
+     *
+     * @param name        название позиции
+     * @param price       цена в рублях
+     * @param vat         НДС в %. По умолчанию 0%
      * @param menuGroupId ID связанной группы меню
      * @param stockItemId ID связанной позиции на складе
      */
@@ -36,11 +38,12 @@ public class MenuItem extends SoftDeletes {
 
     /**
      * Конструктор для создания позиции меню, связанной с техкартой.
-     * @param name название позиции
-     * @param price цена в рублях
-     * @param vat НДС в %. По умолчанию 0%
+     *
+     * @param name           название позиции
+     * @param price          цена в рублях
+     * @param vat            НДС в %. По умолчанию 0%
      * @param processChartId ID связанной техкарты
-     * @param menuGroupId ID связанной группы меню
+     * @param menuGroupId    ID связанной группы меню
      */
     public MenuItem(String name, BigDecimal price, Integer vat, Long processChartId, Integer menuGroupId) {
         this.name = name;
@@ -89,14 +92,14 @@ public class MenuItem extends SoftDeletes {
     @ToString.Exclude
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "menu_group_id", nullable = false, insertable=false, updatable=false,
+    @JoinColumn(name = "menu_group_id", insertable = false, updatable = false,
             foreignKey = @ForeignKey(name = "menu_item_mgid_fk"))
     private MenuGroup menuGroup;
 
     /**
      * Уникальный идентификатор связанной группы меню
      */
-    @Column(name = "menu_group_id", nullable = false)
+    @Column(name = "menu_group_id")
     private Integer menuGroupId;
 
     /**
@@ -107,8 +110,8 @@ public class MenuItem extends SoftDeletes {
      */
     @ToString.Exclude
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stock_item_id", insertable=false, updatable=false,
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "stock_item_id", insertable = false, updatable = false,
             foreignKey = @ForeignKey(name = "menu_item_siid_fk"))
     private StockItem stockItem;
 
@@ -126,8 +129,8 @@ public class MenuItem extends SoftDeletes {
      */
     @ToString.Exclude
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "process_chart_id", insertable=false, updatable=false,
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "process_chart_id", insertable = false, updatable = false,
             foreignKey = @ForeignKey(name = "menu_item_pcid_fk"))
     private ProcessChart processChart;
 
@@ -137,26 +140,4 @@ public class MenuItem extends SoftDeletes {
     @Column(name = "process_chart_id")
     private Long processChartId;
 
-    /**
-     * Сравнение позиций меню, исключая ID, связь с группой меню, нахождение в стоп-листе,
-     * дату удаления. Значения позиции на складе и техкарты сравниваются по ID при наличии.
-     * @param o объект для сравнения
-     * @return результат сравнения выбранных полей
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MenuItem menuItem = (MenuItem) o;
-        return name.equals(menuItem.name)
-                && price.equals(menuItem.price)
-                && vat.equals(menuItem.vat)
-                && stockItemId.equals(menuItem.stockItemId)
-                && processChartId.equals(menuItem.processChartId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, price, vat, stockItemId, processChartId);
-    }
 }

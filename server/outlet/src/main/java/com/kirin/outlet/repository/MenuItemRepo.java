@@ -4,6 +4,7 @@ import com.kirin.outlet.model.MenuItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MenuItemRepo extends JpaRepository<MenuItem, Long> {
 
@@ -45,5 +46,13 @@ public interface MenuItemRepo extends JpaRepository<MenuItem, Long> {
      * @return список неудаленных позиций меню
      */
     List<MenuItem> findAllByDeletedAtIsNull();
+
+    /**
+     * Получение неудаленной позиции меню по ID.
+     *
+     * @param id уникальный идентификатор позиции меню
+     * @return Optional объект позиции меню
+     */
+    Optional<MenuItem> findByIdAndDeletedAtIsNull(Long id);
 
 }

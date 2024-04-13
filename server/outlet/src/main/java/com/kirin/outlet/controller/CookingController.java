@@ -1,7 +1,6 @@
 package com.kirin.outlet.controller;
 
 import com.kirin.outlet.model.SemiFinished;
-import com.kirin.outlet.model.dto.CookGroupDto;
 import com.kirin.outlet.model.dto.ProcessChartDto;
 import com.kirin.outlet.service.CookingService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,14 +22,6 @@ import java.util.List;
 public class CookingController {
 
     private final CookingService cookingService;
-
-    @Operation(summary = "Получение сгруппированного списка позиций меню, для которых есть техкарта",
-            description = "Список групп и позиций меню, которые готовятся на предприятии, " +
-                    "отсортирован по имени группы и по имени позиции меню внутри группы")
-    @GetMapping
-    public ResponseEntity<List<CookGroupDto>> getProductionList() {
-        return ResponseEntity.ok(cookingService.getProductionList());
-    }
 
     @Operation(summary = "Получение информации о техкарте по ID",
             description = "Возвращает информацию о техкарте и рецептурных компонентах, " +

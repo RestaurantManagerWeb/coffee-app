@@ -2,6 +2,7 @@ package com.kirin.outlet.controller;
 
 import com.kirin.outlet.model.MenuGroup;
 import com.kirin.outlet.model.MenuItem;
+import com.kirin.outlet.model.dto.CookGroupDto;
 import com.kirin.outlet.model.dto.MenuGroupDto;
 import com.kirin.outlet.model.dto.MenuItemStockDto;
 import com.kirin.outlet.service.MenuService;
@@ -50,7 +51,7 @@ public class MenuController {
     @GetMapping("/group/{id}")
     public ResponseEntity<List<MenuItem>> getMenuItemsInGroup(
             @Parameter(name = "id", description = "MenuGroup id", example = "1")
-            @PathVariable("id") Integer groupId
+            @PathVariable("id") int groupId
     ) {
         return ResponseEntity.ok().body(menuService.getMenuItemsInGroup(groupId));
     }
@@ -64,7 +65,7 @@ public class MenuController {
     @GetMapping("/item/{id}")
     public ResponseEntity<MenuItem> getMenuItem(
             @Parameter(name = "id", description = "MenuItem id", example = "1")
-            @PathVariable("id") Long id
+            @PathVariable("id") long id
     ) {
         return ResponseEntity.ok(menuService.getMenuItemById(id));
     }
@@ -74,7 +75,7 @@ public class MenuController {
     @GetMapping("/group/info/{id}")
     public ResponseEntity<MenuGroup> getMenuGroup(
             @Parameter(name = "id", description = "MenuGroup id", example = "1")
-            @PathVariable("id") Integer id
+            @PathVariable("id") int id
     ) {
         return ResponseEntity.ok(menuService.getMenuGroupById(id));
     }
@@ -104,14 +105,33 @@ public class MenuController {
     }
 
     @Operation(summary = "Удаление группы меню",
-            description = "Мягкое удаление группы меню и входящих позиций меню")
+            description = "Удаление группы меню и входящих позиций меню")
     @DeleteMapping("/group/{id}")
     public ResponseEntity<Void> deleteMenuGroup(
             @Parameter(name = "id", description = "MenuGroup id", example = "1")
-            @PathVariable("id") Integer id
+            @PathVariable("id") int id
     ) {
         menuService.deleteMenuGroupById(id);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Operation(summary = "Удаление позиции меню",
+            description = "Мягкое удаление позиции меню и полное удаление связанной техкарты при наличии")
+    @DeleteMapping("/item/{id}")
+    public ResponseEntity<Void> deleteMenuItem(
+            @Parameter(name = "id", description = "MenuItem id", example = "1")
+            @PathVariable("id") long id
+    ) {
+        menuService.deleteMenuItemById(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Operation(summary = "Получение сгруппированного списка позиций меню, для которых есть техкарта",
+            description = "Список групп и неудаленных позиций меню, которые готовятся на предприятии, " +
+                    "отсортирован по имени группы и по имени позиции меню внутри группы")
+    @GetMapping("/cook")
+    public ResponseEntity<List<CookGroupDto>> getProductionList() {
+        return ResponseEntity.ok(menuService.getProductionList());
     }
 
 }
