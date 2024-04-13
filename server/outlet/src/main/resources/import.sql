@@ -15,6 +15,8 @@ INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Салатна�
 INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Огурец свежий', 227, 1);
 INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Яйцо куриное', 8, 3);
 INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Тунец консервированный рубленый', 483, 1);
+INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Вода н/г 0.5 л пластик', 21, 3);
+INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Зерно Бразилия 250 г', 3, 3);
 
 -- processing_method
 INSERT INTO processing_method(name, description) VALUES ('без обработки', null);

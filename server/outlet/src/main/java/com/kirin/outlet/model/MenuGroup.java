@@ -6,15 +6,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
-
-import java.sql.Timestamp;
+import lombok.EqualsAndHashCode;
 
 /**
- * Группы меню. Например, кофе, чай, сэндвичи, покупные товары
+ * Группа меню
  */
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Data
-public class MenuGroup {
+public class MenuGroup extends SoftDeletes {
 
     /**
      * Уникальный идентификатор группы меню
@@ -29,9 +29,4 @@ public class MenuGroup {
     @Column(nullable = false, unique = true, columnDefinition = "VARCHAR(30)")
     private String name;
 
-    /**
-     * Дата и время удаления группы меню, может быть null
-     */
-    @Column(insertable = false)
-    private Timestamp deletedAt;
 }

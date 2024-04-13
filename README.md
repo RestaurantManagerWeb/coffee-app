@@ -109,3 +109,34 @@ psql -U sa -d outlet_db
   }
 ]
 ```
+
+3. [(POST) /menu/group](http://localhost:8765/outlet/menu/group) - создание новой группы меню
+
+```json
+{
+  "name": "кофе"
+}
+```
+
+4. [(POST) /menu/item/stock](http://localhost:8765/outlet/menu/item/stock) - создание позиции меню, связанной
+   с позицией на складе
+
+```json
+{
+  "name": "вода н/г 0.5 л, пластик",
+  "price": 100,
+  "vat": 10,
+  "menuGroupId": 2,
+  "stockItemId": 12
+}
+```
+
+```json
+{
+  "name": "Зерно Бразилия, 250 г",
+  "price": 1700,
+  "vat": 20,
+  "menuGroupId": 2,
+  "stockItemId": 13
+}
+```

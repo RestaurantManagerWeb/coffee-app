@@ -2,6 +2,7 @@ package com.kirin.outlet.service;
 
 import com.kirin.outlet.model.Ingredient;
 import com.kirin.outlet.model.ProcessingMethod;
+import com.kirin.outlet.model.ShoppingCart;
 import com.kirin.outlet.model.StockItem;
 import com.kirin.outlet.model.UnitMeasure;
 import com.kirin.outlet.model.dto.ShopCartItemDto;
@@ -61,47 +62,6 @@ public class StockService {
             } else rejection.add(item.getStockItemId());
         }
         return rejection;
-    }
-
-    /**
-     * Списание указанного количества продукта (товара) со склада. Если оставшиеся запасы
-     * продукта (товара) равны 0 или меньше 0, будет отправлено уведомление. Если продукт
-     * (товар) с указанным ID не будет найден, то будет выбрашено исключение
-     * ItemNotFoundException.
-     *
-     * @param id    идентификатор продукта (товара) на складе
-     * @param count количество для списания
-     */
-    public void writeOffProduct(Long id, Double count) {
-        Optional<StockItem> sItem = stockItemRepo.findById(id);
-        if (sItem.isEmpty()) {
-            throw new ItemNotFoundException(
-                    "Не найдена позиция на складе с ID = " + id + ". Нельзя списать продукт");
-        }
-        sItem.get().setQuantity(
-                sItem.get().getQuantity().subtract(BigDecimal.valueOf(count)));
-        stockItemRepo.save(sItem.get());
-        // TODO: рассылка уведомлений о проблемах со складом
-        if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) == 0) {
-            System.err.printf("На складе закончилась позиция с ID = %d (%s)\n",
-                    id, sItem.get().getName());
-        } else if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) < 0) {
-            System.err.println(new StringBuilder("Запасы позиции с ID = ")
-                    .append(id)
-                    .append(" (")
-                    .append(sItem.get().getName())
-                    .append(") меньше 0 (")
-                    .append(sItem.get().getQuantity())
-                    .append(")"));
-        }
-
-    }
-
-    public void writeOffProductsFromStock(List<ShopCartItemDto> shoppingCartItems) {
-
-        System.out.println(">>>>> Продукты съели!");
-
-
     }
 
     /**
@@ -195,4 +155,53 @@ public class StockService {
     public List<UnitMeasure> getUnitsMeasureList() {
         return unitMeasureRepo.findAll();
     }
+
+    /**
+     * Списание указанного количества продукта (товара) со склада. Если оставшиеся запасы
+     * продукта (товара) равны 0 или меньше 0, будет отправлено уведомление. Если продукт
+     * (товар) с указанным ID не будет найден, то будет выбрашено исключение
+     * ItemNotFoundException.
+     *
+     * @param id    идентификатор продукта (товара) на складе
+     * @param count количество для списания
+     */
+    public void writeOffProduct(Long id, Double count) {
+        Optional<StockItem> sItem = stockItemRepo.findById(id);
+        if (sItem.isEmpty()) {
+            throw new ItemNotFoundException(
+                    "Не найдена позиция на складе с ID = " + id + ". Нельзя списать продукт");
+        }
+        sItem.get().setQuantity(
+                sItem.get().getQuantity().subtract(BigDecimal.valueOf(count)));
+        stockItemRepo.save(sItem.get());
+        // TODO: рассылка уведомлений о проблемах со складом
+        if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) == 0) {
+            System.err.printf("На складе закончилась позиция с ID = %d (%s)\n",
+                    id, sItem.get().getName());
+        } else if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) < 0) {
+            System.err.println(new StringBuilder("Запасы позиции с ID = ")
+                    .append(id)
+                    .append(" (")
+                    .append(sItem.get().getName())
+                    .append(") меньше 0 (")
+                    .append(sItem.get().getQuantity())
+                    .append(")"));
+        }
+
+    }
+
+    public void writeOffProductsFromStock(List<ShopCartItemDto> shoppingCartItems) {
+
+        System.out.println(">>>>> Продукты съели!");
+
+
+    }
+
+    public void cancelWriteOffProductsFromStock(List<ShoppingCart> shoppingCarts) {
+
+        System.out.println(">>>>> Продукты вернули после отмены чека!");
+
+
+    }
+
 }

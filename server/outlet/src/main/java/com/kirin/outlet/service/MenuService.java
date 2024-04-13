@@ -2,16 +2,24 @@ package com.kirin.outlet.service;
 
 import com.kirin.outlet.model.MenuGroup;
 import com.kirin.outlet.model.MenuItem;
+import com.kirin.outlet.model.StockItem;
+import com.kirin.outlet.model.dto.MenuGroupDto;
+import com.kirin.outlet.model.dto.MenuItemStockDto;
+import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
 import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
 import com.kirin.outlet.repository.MenuGroupRepo;
 import com.kirin.outlet.repository.MenuItemRepo;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.Optional;
 
+@Validated
 @Service
 @RequiredArgsConstructor
 public class MenuService {
@@ -20,13 +28,15 @@ public class MenuService {
 
     private final MenuGroupRepo menuGroupRepo;
 
+    private final StockService stockService;
+
     /**
      * Получения списка групп меню, отсортированного по имени группы.
      *
      * @return отсортированный список групп меню
      */
     public List<MenuGroup> getMenuGroupsList() {
-        List<MenuGroup> menuGroups = menuGroupRepo.findAll();
+        List<MenuGroup> menuGroups = menuGroupRepo.findAllByDeletedAtIsNull();
         menuGroups.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
         return menuGroups;
     }
@@ -38,20 +48,22 @@ public class MenuService {
      * @param groupId ID группы меню
      * @return отсортированный список позиций меню в группе, может быть пустым
      */
-    public List<MenuItem> getMenuItemsInGroup(Integer groupId) {
-        getMenuGroupById(groupId);
-        List<MenuItem> menuItems = menuItemRepo.findByMenuGroupId(groupId);
+    public List<MenuItem> getMenuItemsInGroup(@Positive Integer groupId) {
+        if (getMenuGroupById(groupId).getDeletedAt() != null)
+            throw new IncorrectRequestDataException("Группа меню с ID = " + groupId + " была удалена");
+
+        List<MenuItem> menuItems = menuItemRepo.findByMenuGroupIdAndDeletedAtIsNull(groupId);
         menuItems.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
         return menuItems;
     }
 
     /**
-     * Получение списка всех позиций меню.
+     * Получение списка всех неудаленных позиций меню.
      *
      * @return список позиций меню
      */
     public List<MenuItem> getMenuItems() {
-        return menuItemRepo.findAll();
+        return menuItemRepo.findAllByDeletedAtIsNull();
     }
 
     /**
@@ -60,7 +72,7 @@ public class MenuService {
      * @param id уникальный идентификатор позиции меню
      * @return позицию меню с указанным ID
      */
-    public MenuItem getMenuItemById(Long id) {
+    public MenuItem getMenuItemById(@Positive Long id) {
         Optional<MenuItem> menuItem = menuItemRepo.findById(id);
         if (menuItem.isEmpty())
             throw new ItemNotFoundException("Позиция меню с ID = " + id + " не найдена");
@@ -68,60 +80,149 @@ public class MenuService {
     }
 
     /**
-     * Получение группы меню по ID.
+     * Получение неудаленной группы меню по ID.
      *
      * @param id уникальный идентификатор группы меню
      * @return группа меню с указанным ID
      */
-    public MenuGroup getMenuGroupById(Integer id) {
-        Optional<MenuGroup> menuGroup = menuGroupRepo.findById(id);
+    public MenuGroup getMenuGroupById(@Positive Integer id) {
+        Optional<MenuGroup> menuGroup = menuGroupRepo.findByIdAndDeletedAtIsNull(id);
         if (menuGroup.isEmpty())
             throw new ItemNotFoundException("Группа меню с ID = " + id + " не найдена");
         return menuGroup.get();
     }
 
     /**
-     * Добавление новой группы меню.
-     * @param menuGroup объект группы меню с именем новой группы
+     * Добавление новой группы меню. Если уже есть неудаленная группа с таким же именем
+     * (игнорируя регистр), то возвращается она. Если есть удаленная группа с таким же именем,
+     * то она помечается неудаленной, заменяется имя на то, что пришло в dto, и запись обновляется.
+     * Если группа с указанным именем не найдена, будет создана новая.
+     *
+     * @param dto объект группы меню с именем новой группы
      * @return объект группы меню с присвоенным ID
      */
-    public MenuGroup createMenuGroup(MenuGroup menuGroup) {
-        String name = checkAndGetCorrectMenuGroupName(menuGroup.getName());
-        MenuGroup newGroup = new MenuGroup();
-        newGroup.setName(name);
-        try {
-            return menuGroupRepo.save(newGroup);
-        } catch (RuntimeException e) {
-            throw new IncorrectRequestDataException(
-                    "Нельзя создать группу меню с именем '" + menuGroup.getName() + "'");
-        }
+    public MenuGroup createMenuGroup(@Valid MenuGroupDto dto) {
+        List<MenuGroup> findMenuGroups = menuGroupRepo.findByNameIgnoreCase(dto.getName());
+        if (findMenuGroups.size() == 1 && !findMenuGroups.get(0).isDeleted())
+            return findMenuGroups.get(0);
+        String name = Character.toUpperCase(dto.getName().charAt(0))
+                + dto.getName().substring(1);
+        MenuGroup menuGroup;
+        if (findMenuGroups.isEmpty()) menuGroup = new MenuGroup();
+        else if (findMenuGroups.size() == 1 && findMenuGroups.get(0).isDeleted()) {
+            menuGroup = findMenuGroups.get(0);
+            menuGroup.cancelDelete();
+        } else throw new IncorrectDataInDatabaseException("Значение name = '" + dto.getName()
+                + "' в таблице menu_group среди неудаленных позиций не уникально");
+        menuGroup.setName(name);
+        return menuGroupRepo.save(menuGroup);
     }
 
     /**
-     * Проверка имени группы меню на корректность и получение имени с первой прописной буквой.
-     * Имя должно иметь длину от 3 до 30 символов включительно, состоять из символов русского
-     * и латинского алфавита, допустимо разделение слов через пробел или дефис. Имя должно быть
-     * уникальным, не зарегистрированным в репозитории.
-     * @param name имя группы для проверки
-     * @return валидное имя группы, начинающееся с прописной буквы
+     * Удаление группы меню по ID и входящих в группу позиций меню.
+     *
+     * @param id уникальный идентификатор группы меню
      */
-    private String checkAndGetCorrectMenuGroupName(String name) {
-        if (name == null || name.isEmpty())
-            throw new IncorrectRequestDataException("Имя для новой группы не задано");
-        name = name.trim();
-        if (name.length() < 3)
-            throw new IncorrectRequestDataException(
-                    "Длина имени группы меню не должна быть менее 3 символов");
-        if (name.length() > 30)
-            throw new IncorrectRequestDataException(
-                    "Длина имени группы меню не должна превышать 30 символов");
-        if (!name.matches("[A-Za-zА-ЯЁа-яё]{2,}([\s\\-][A-Za-zА-ЯЁа-яё]+)*"))
-            throw new IncorrectRequestDataException("Имя группы меню должно состоять только из символов " +
-                    "латинского и русского алфавитов, слова можно разделять пробелом или дефисом");
-        if (menuGroupRepo.findByNameIgnoreCase(name).isPresent())
-            throw new IncorrectRequestDataException("Группа меню с именем '" + name + "' уже существует");
+    public void deleteMenuGroupById(@Positive int id) {
+        MenuGroup menuGroup = getMenuGroupById(id);
+        menuGroup.setDelete();
+        menuGroupRepo.save(menuGroup);
+        // TODO: удаление позиций меню
+    }
 
-        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    /**
+     * Создание позиции меню, связанной со штучной позицией на складе. Входные данные сначала
+     * проходят проверку на актуальность. Если данные актуальны и в репозитории есть удаленная
+     * позиция с такими же именем (игнорируя регистр), ценой, НДС и ID позиции на складе, то
+     * позиция меню с данным ID обновляется. Если позиции меню с указанным именем (игнорируя
+     * регистр) не найдены, будет создана новая.
+     *
+     * @param dto данные для создания позиции меню, связанной со штучной позицией на складе
+     * @return созданная или обновленная позиция меню
+     */
+    public MenuItem createMenuItemWithStockItem(@Valid MenuItemStockDto dto) {
+        checkCorrectMenuItemStockDto(dto);
+        String name = Character.toUpperCase(dto.getName().charAt(0))
+                + dto.getName().substring(1);
+        MenuItem menuItem = new MenuItem(
+                name, dto.getPrice(), dto.getVat(), dto.getMenuGroupId(), dto.getStockItemId());
+        long sameId = getIdSameDeletedMenuItem(menuItem);
+        if (sameId > 0) menuItem.setId(sameId);
+        return menuItemRepo.save(menuItem);
+    }
+
+    /**
+     * Поиск среди удаленных позиций меню записи со значениями имени (игнорируя регистр),
+     * цены, НДС, ID позиции на складе и ID техкарты совпадающими с соответствующими полями
+     * указанной позиции меню.
+     *
+     * @param menuItem позиция меню с данными для сравнения
+     * @return ID найденной позиции меню или -1, если позиция не найдена
+     */
+    private long getIdSameDeletedMenuItem(MenuItem menuItem) {
+        List<MenuItem> findByName = menuItemRepo.findByNameIgnoreCase(menuItem.getName());
+        if (!findByName.isEmpty()) {
+            Optional<MenuItem> delSameItem = findByName.stream()
+                    .filter(item -> item.getPrice().equals(menuItem.getPrice())
+                            && item.getVat().equals(menuItem.getVat())
+                            && item.getStockItemId().equals(menuItem.getStockItemId())
+                            && item.getProcessChartId().equals(menuItem.getProcessChartId())
+                            && item.isDeleted()
+                    ).findFirst();
+            if (delSameItem.isPresent())
+                return delSameItem.get().getId();
+        }
+        return -1;
+    }
+
+    /**
+     * Проверка на валидность данных для создания позиции меню, связанной с позицией на складе.
+     * Должны быть указаны существующие группа меню, уникальное имя позиции, уникальная штучная
+     * позиция на складе.
+     *
+     * @param dto данные для проверки
+     */
+    private void checkCorrectMenuItemStockDto(MenuItemStockDto dto) {
+        getMenuGroupById(dto.getMenuGroupId());
+        checkUniqueMenuItemName(dto.getName());
+        StockItem stockItem = stockService.getStockItemById(dto.getStockItemId());
+        // TODO: магические ед. измер.
+        if (stockItem.getUnitMeasure().getId() != 3)
+            throw new IncorrectRequestDataException("Позиция на складе должна быть штучной");
+        checkUniqueStockItemId(dto.getStockItemId());
+    }
+
+    /**
+     * Проверка на отсутствие в репозитории неудаленной позиции меню с указанным именем
+     * (игнорируя регистр).
+     *
+     * @param name имя позиции меню для проверки на уникальность
+     */
+    private void checkUniqueMenuItemName(String name) {
+        List<MenuItem> menuItems = menuItemRepo.findByNameIgnoreCaseAndDeletedAtIsNull(name);
+        if (menuItems.size() == 1)
+            throw new IncorrectRequestDataException("Уже существует позиция меню с именем '"
+                    + name + "' (ID = " + menuItems.get(0).getId() + ")");
+        else if (menuItems.size() > 1)
+            throw new IncorrectDataInDatabaseException(
+                    "Значение name = '" + name
+                            + "' в таблице menu_item среди неудаленных позиций не уникально");
+    }
+
+    /**
+     * Проверка на отсутствие в репозитории неудаленной позиции меню, связанной с указанной
+     * позицией на складе по ID.
+     *
+     * @param stockItemId ID позиции на складе для проверки уникальности
+     */
+    private void checkUniqueStockItemId(@Positive long stockItemId) {
+        List<MenuItem> items = menuItemRepo.findByStockItemIdAndDeletedAtIsNull(stockItemId);
+        if (items.size() == 1) throw new IncorrectRequestDataException(
+                "Уже существует позиция меню (ID = " + items.get(0).getId()
+                        + ") для продажи позиции на складе с ID = " + stockItemId);
+        else if (items.size() > 1) throw new IncorrectDataInDatabaseException(
+                "Значение stock_item_id = " + stockItemId
+                        + " в таблице menu_item среди неудаленных позиций не уникально");
     }
 
 }
