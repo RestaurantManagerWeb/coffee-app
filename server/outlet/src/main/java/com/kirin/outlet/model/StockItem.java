@@ -1,9 +1,6 @@
 package com.kirin.outlet.model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIdentityReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -39,12 +36,16 @@ public class StockItem {
      * Единица измерения количества. Однонаправленная связь ManyToOne с сущностью
      * единицы измерения.
      */
-    @JsonProperty("unitMeasureId")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "unit_measure_id", nullable = false,
+    @JoinColumn(name = "unit_measure_id", nullable = false, insertable=false, updatable=false,
             foreignKey = @ForeignKey(name = "stock_item_umid_fk"))
     private UnitMeasure unitMeasure;
+
+    /**
+     * Уникальный идентификатор единицы измерения
+     */
+    @Column(name = "unit_measure_id", nullable = false)
+    private Long unitMeasureId;
 
 }

@@ -55,4 +55,10 @@ public interface MenuItemRepo extends JpaRepository<MenuItem, Long> {
      */
     Optional<MenuItem> findByIdAndDeletedAtIsNull(Long id);
 
+    /**
+     * Получение списка неудаленных позиций меню, у которых связь с позицией на складе
+     * не равна null.
+     * @return список неудаленных позиций меню, связанных с позициями на складе
+     */
+    List<MenuItem> findByStockItemIdIsNotNullAndDeletedAtIsNull();
 }

@@ -1,6 +1,7 @@
 package com.kirin.outlet.service;
 
 import com.kirin.outlet.model.Ingredient;
+import com.kirin.outlet.model.MenuItem;
 import com.kirin.outlet.model.ProcessingMethod;
 import com.kirin.outlet.model.ShoppingCart;
 import com.kirin.outlet.model.StockItem;
@@ -9,6 +10,7 @@ import com.kirin.outlet.model.dto.ShopCartItemDto;
 import com.kirin.outlet.model.dto.StockItemDto;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
 import com.kirin.outlet.repository.IngredientRepo;
+import com.kirin.outlet.repository.MenuItemRepo;
 import com.kirin.outlet.repository.ProcessingMethodRepo;
 import com.kirin.outlet.repository.StockItemRepo;
 import com.kirin.outlet.repository.UnitMeasureRepo;
@@ -26,6 +28,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class StockService {
+
+    private final MenuItemRepo menuItemRepo;
 
     private final UnitMeasureRepo unitMeasureRepo;
 
@@ -204,4 +208,19 @@ public class StockService {
 
     }
 
+    /**
+     * Получение списка штучных позиций на складе, которые не связаны с неудаленными позициями
+     * меню. Список отсортирован по имени.
+     * @return список найденных позиций на складе
+     */
+    public List<StockItem> getFreeStockItems() {
+        List<StockItem> stockItems = stockItemRepo.findByUnitMeasureIdIs(3); // TODO: ед.измер.
+        List<MenuItem> menuItems = menuItemRepo.findByStockItemIdIsNotNullAndDeletedAtIsNull();
+        List<Long> menuStockItems = menuItems.stream()
+                .mapToLong(item -> item.getStockItemId())
+                .boxed().toList();
+        return stockItems.stream()
+                .filter(item -> !menuStockItems.contains(item.getId()))
+                .sorted((o1, o2) -> o1.getName().compareTo(o2.getName())).toList();
+    }
 }

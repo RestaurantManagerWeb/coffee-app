@@ -74,4 +74,24 @@ public class StockController {
         return ResponseEntity.ok(stockService.getUnitMeasureById(id));
     }
 
+    @Operation(summary = "Получение списка несвязанных штучных позиций на складе",
+            description = "Возвращает список штучных позиций на складе, которые не связаны " +
+                    "с неудаленными позициями меню, отсортированный по имени")
+    @GetMapping("/retail/free")
+    public ResponseEntity<List<StockItem>> getFreeStockItems() {
+        return ResponseEntity.ok(stockService.getFreeStockItems());
+    }
+
+    // @Operation(summary = "Добавление новой позиции на склад или внесение изменений",
+    //         description = "Для создания позиции требуется уникальное имя и ID единиц измерения. " +
+    //                 "Для внесения изменений должен быть указан существующий ID позиции.")
+    // @PostMapping()
+    // public ResponseEntity<StockItem> saveNewStockItem(
+    //         @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    //                 description = "")
+    //         @RequestBody StockItem stockItem
+    // ) {
+    //     return ResponseEntity.ok(stockService.saveStockItem(stockItem));
+    // }
+
 }
