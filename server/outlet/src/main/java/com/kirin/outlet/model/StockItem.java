@@ -3,6 +3,7 @@ package com.kirin.outlet.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
@@ -11,7 +12,20 @@ import java.math.BigDecimal;
  */
 @Entity
 @Data
+@NoArgsConstructor
 public class StockItem {
+
+    /**
+     * Конструктор для создания новой позиции на складе с нулевым количеством.
+     *
+     * @param name          уникальное название позиции на складе
+     * @param unitMeasureId уникальный идентификатор единицы измерения
+     */
+    public StockItem(String name, Integer unitMeasureId) {
+        this.name = name;
+        this.quantity = new BigDecimal(0);
+        this.unitMeasureId = unitMeasureId;
+    }
 
     /**
      * Уникальный идентификатор позиции на складе
@@ -38,7 +52,7 @@ public class StockItem {
      */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "unit_measure_id", nullable = false, insertable=false, updatable=false,
+    @JoinColumn(name = "unit_measure_id", nullable = false, insertable = false, updatable = false,
             foreignKey = @ForeignKey(name = "stock_item_umid_fk"))
     private UnitMeasure unitMeasure;
 
@@ -46,6 +60,6 @@ public class StockItem {
      * Уникальный идентификатор единицы измерения
      */
     @Column(name = "unit_measure_id", nullable = false)
-    private Long unitMeasureId;
+    private Integer unitMeasureId;
 
 }

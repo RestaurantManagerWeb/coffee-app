@@ -9,9 +9,18 @@ public interface StockItemRepo extends JpaRepository<StockItem, Long> {
 
     /**
      * Получение списка позиций меню по ID единицы измерения.
+     *
      * @param unitMeasureId ID единицы измерения
      * @return список найденных позиций
      */
     List<StockItem> findByUnitMeasureIdIs(Integer unitMeasureId);
+
+    /**
+     * Получение списка позиций меню по имени, игнорируя регистр.
+     *
+     * @param name имя для поиска
+     * @return список найденных позиций
+     */
+    List<StockItem> findByNameIgnoreCase(String name);
 
 }

@@ -1,21 +1,29 @@
 package com.kirin.outlet.model.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 /**
- * Данные о позиции на складе и ее количестве
+ * Данные для создания позиции на складе
  */
 @Getter
 public class StockItemDto {
 
     /**
-     * ID позиции на складе
+     * Название позиции
      */
-    private long stockItemId;
+    @NotBlank
+    @Size(min = 3, max = 100)
+    @Pattern(regexp = "^[A-Za-zА-ЯЁа-яё]{2,}(([ /-]|(, ))?[\\dA-Za-zА-ЯЁа-яё]+\\.?)*")
+    private String name;
 
     /**
-     * Количество в граммах, миллилитрах или штуках (целое число)
+     * Уникальный идентификатор единицы измерения
      */
-    private double quantity;
+    @Positive
+    private int unitMeasureId;
 
 }

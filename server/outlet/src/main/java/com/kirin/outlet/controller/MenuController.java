@@ -97,8 +97,7 @@ public class MenuController {
     @PostMapping("/item/stock")
     public ResponseEntity<MenuItem> createMenuItemWithStockItem(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description =
-                    "Данные для создания позиции меню, связанной со штучной позицией на складе. " +
-                            "Для тестирования доступны позиции на складе с ID 12 и 13")
+                    "Данные для создания позиции меню, связанной со штучной позицией на складе")
             @RequestBody MenuItemStockDto itemStockDto
     ) {
         return ResponseEntity.ok(menuService.createMenuItemWithStockItem(itemStockDto));

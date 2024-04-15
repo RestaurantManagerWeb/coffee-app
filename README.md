@@ -88,29 +88,7 @@ psql -U sa -d outlet_db
 }
 ```
 
-2. [(POST) /stock/shipment](http://localhost:8765/outlet/stock/shipment) - принятие
-   новой поставки продуктов. Данные: ID продукта на складе в outlet (StockItem, Long),
-   количество в штуках (без дробной части), миллилитрах или граммах (Double).
-   Возвращает список непринятых позиций (ID продукта).
-
-```json
-[
-  {
-    "stockItemId": 1,
-    "quantity": 49
-  },
-  {
-    "stockItemId": 3,
-    "quantity": 215.5
-  },
-  {
-    "stockItemId": 6,
-    "quantity": 12
-  }
-]
-```
-
-3. [(POST) /menu/group](http://localhost:8765/outlet/menu/group) - создание новой группы меню
+2. [(POST) /menu/group](http://localhost:8765/outlet/menu/group) - создание новой группы меню
 
 ```json
 {
@@ -118,7 +96,7 @@ psql -U sa -d outlet_db
 }
 ```
 
-4. [(POST) /menu/item/stock](http://localhost:8765/outlet/menu/item/stock) - создание позиции меню, связанной
+3. [(POST) /menu/item/stock](http://localhost:8765/outlet/menu/item/stock) - создание позиции меню, связанной
    с позицией на складе
 
 ```json
@@ -138,5 +116,36 @@ psql -U sa -d outlet_db
   "vat": 20,
   "menuGroupId": 2,
   "stockItemId": 13
+}
+```
+
+4. [(POST) /stock/shipment](http://localhost:8765/outlet/stock/shipment) - принятие
+   новой поставки продуктов. Данные: ID позиции на складе в outlet (StockItem, Long),
+   количество в штуках (без дробной части), миллилитрах или граммах (Double).
+   Возвращает список непринятых позиций (ID позиции).
+
+```json
+[
+  {
+    "stockItemId": 1,
+    "quantity": 49
+  },
+  {
+    "stockItemId": 3,
+    "quantity": 215.5
+  },
+  {
+    "stockItemId": 6,
+    "quantity": 12
+  }
+]
+```
+
+5. [(POST) /stock](http://localhost:8765/outlet/stock) - создание новой позиции на складе
+
+```json
+{
+  "name": "сыр творожный сливочный",
+  "unitMeasureId": 1
 }
 ```

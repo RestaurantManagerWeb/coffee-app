@@ -1,21 +1,23 @@
 package com.kirin.outlet.service;
 
-import com.kirin.outlet.model.Ingredient;
 import com.kirin.outlet.model.MenuItem;
-import com.kirin.outlet.model.ProcessingMethod;
 import com.kirin.outlet.model.ShoppingCart;
 import com.kirin.outlet.model.StockItem;
 import com.kirin.outlet.model.UnitMeasure;
 import com.kirin.outlet.model.dto.ShopCartItemDto;
 import com.kirin.outlet.model.dto.StockItemDto;
+import com.kirin.outlet.model.dto.StockItemQuantityDto;
+import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
+import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
-import com.kirin.outlet.repository.IngredientRepo;
 import com.kirin.outlet.repository.MenuItemRepo;
-import com.kirin.outlet.repository.ProcessingMethodRepo;
 import com.kirin.outlet.repository.StockItemRepo;
 import com.kirin.outlet.repository.UnitMeasureRepo;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -23,8 +25,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Сервис для управления складом и списком доступных ингредиентов
+ * Сервис для управления складом
  */
+@Validated
 @Service
 @RequiredArgsConstructor
 public class StockService {
@@ -35,25 +38,20 @@ public class StockService {
 
     private final StockItemRepo stockItemRepo;
 
-    private final ProcessingMethodRepo processingMethodRepo;
-
-    private final IngredientRepo ingredientRepo;
-
     /**
-     * Принять поставку продуктов со склада. Если ID позиции ссылается на несуществующий
-     * ID позиции на складе, или передано отрицательное либо нулевое количество,
-     * или позиция штучная, а данные по количеству включают дробную часть,
+     * Принять поставку продуктов. Если ID позиции ссылается на несуществующий
+     * ID позиции на складе, или позиция штучная, а данные по количеству включают дробную часть,
      * то данный продукт не принимается на склад, а его ID записывается и отправляется обратно.
      *
-     * @param shipment поставляемые продукты (ID продукта : количество в г, мл или шт)
-     * @return список непринятых позиций, может быть пустым
+     * @param shipment поставляемые продукты (ID позиций на складе и добавляемое количество)
+     * @return список ID непринятых позиций, может быть пустым
      */
-    public List<Long> acceptIncomingInventoryShipments(List<StockItemDto> shipment) {
+    public List<Long> acceptIncomingInventoryShipments(List<@Valid StockItemQuantityDto> shipment) {
         List<Long> rejection = new ArrayList<>();
         StockItem stockItem;
-        for (StockItemDto item : shipment) {
+        for (StockItemQuantityDto item : shipment) {
             Optional<StockItem> sItem = stockItemRepo.findById(item.getStockItemId());
-            if (sItem.isPresent() && item.getQuantity() > 0) {
+            if (sItem.isPresent()) {
                 stockItem = sItem.get();
                 // TODO: ссылка на магические единицы измерения
                 if (stockItem.getUnitMeasure().getId() == 3 && item.getQuantity() % 1 != 0) {
@@ -74,7 +72,7 @@ public class StockService {
      * @param id уникальный идентификатор позиции на складе
      * @return найденную позицию на складе
      */
-    public StockItem getStockItemById(Long id) {
+    public StockItem getStockItemById(@Positive long id) {
         Optional<StockItem> stockItem = stockItemRepo.findById(id);
         if (stockItem.isEmpty())
             throw new ItemNotFoundException("Позиция на складе с ID = " + id + " не найдена");
@@ -87,37 +85,11 @@ public class StockService {
      * @param id уникальный идентификатор единицы измерения
      * @return информацию о найденной единице измерения
      */
-    public UnitMeasure getUnitMeasureById(Integer id) {
+    public UnitMeasure getUnitMeasureById(@Positive int id) {
         Optional<UnitMeasure> unitMeasure = unitMeasureRepo.findById(id);
         if (unitMeasure.isEmpty())
             throw new ItemNotFoundException("Единицы измерения с ID = " + id + " не найдены");
         return unitMeasure.get();
-    }
-
-    /**
-     * Получение информации о методе обработки по ID.
-     *
-     * @param id уникальный идентификатор метода обработки продуктов
-     * @return информацию о найденном методе обработки
-     */
-    public ProcessingMethod getProcessingMethodById(Integer id) {
-        Optional<ProcessingMethod> processingMethod = processingMethodRepo.findById(id);
-        if (processingMethod.isEmpty())
-            throw new ItemNotFoundException("Метод обработки с ID = " + id + " не найден");
-        return processingMethod.get();
-    }
-
-    /**
-     * Получение ингредиента по ID.
-     *
-     * @param id уникальный идентификатор ингредиента
-     * @return найденный ингредиент
-     */
-    public Ingredient getIngredientById(Long id) {
-        Optional<Ingredient> ingredient = ingredientRepo.findById(id);
-        if (ingredient.isEmpty())
-            throw new ItemNotFoundException("Ингредиент с ID = " + id + " не найден");
-        return ingredient.get();
     }
 
     /**
@@ -129,26 +101,6 @@ public class StockService {
         List<StockItem> stockItems = stockItemRepo.findAll();
         stockItems.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
         return stockItems;
-    }
-
-    /**
-     * Получение списка всех ингредиентов, отсортированного по имени.
-     *
-     * @return отсортированный список ингредиентов
-     */
-    public List<Ingredient> getIngredientsList() {
-        List<Ingredient> ingredients = ingredientRepo.findAll();
-        ingredients.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
-        return ingredients;
-    }
-
-    /**
-     * Получение списка всех методов обработки.
-     *
-     * @return список методов обработки
-     */
-    public List<ProcessingMethod> getProcessingMethodsList() {
-        return processingMethodRepo.findAll();
     }
 
     /**
@@ -211,6 +163,7 @@ public class StockService {
     /**
      * Получение списка штучных позиций на складе, которые не связаны с неудаленными позициями
      * меню. Список отсортирован по имени.
+     *
      * @return список найденных позиций на складе
      */
     public List<StockItem> getFreeStockItems() {
@@ -223,4 +176,37 @@ public class StockService {
                 .filter(item -> !menuStockItems.contains(item.getId()))
                 .sorted((o1, o2) -> o1.getName().compareTo(o2.getName())).toList();
     }
+
+    /**
+     * Создание позиции на складе с нулевым запасом.
+     *
+     * @param dto данные об уникальном имени и ID единицы измерения
+     * @return созданная позиция на складе с присвоенным ID
+     */
+    public StockItem createStockItem(@Valid StockItemDto dto) {
+        checkUniqueStockItemName(dto.getName());
+        getUnitMeasureById(dto.getUnitMeasureId());
+
+        String name = Character.toUpperCase(dto.getName().charAt(0))
+                + dto.getName().substring(1);
+        return stockItemRepo.save(new StockItem(name, dto.getUnitMeasureId()));
+    }
+
+    /**
+     * Проверка на отсутствие в репозитории позиции на складе с указанным именем
+     * (игнорируя регистр).
+     *
+     * @param name проверяемое имя
+     */
+    private void checkUniqueStockItemName(String name) {
+        List<StockItem> items = stockItemRepo.findByNameIgnoreCase(name);
+        if (items.size() == 1)
+            throw new IncorrectRequestDataException("Уже существует позиция на складе с именем '"
+                    + name + "' (ID = " + items.get(0).getId() + ")");
+        else if (items.size() > 1)
+            throw new IncorrectDataInDatabaseException(
+                    "Значение name = '" + name
+                            + "' в таблице menu_item среди неудаленных позиций не уникально");
+    }
+
 }

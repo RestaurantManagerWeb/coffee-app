@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -31,8 +30,8 @@ public class ProcessChart {
     /**
      * Выход в граммах
      */
-    @Column(nullable = false, columnDefinition = "decimal(5,1)")
-    private BigDecimal yield;
+    @Column(nullable = false)
+    private Integer yield;
 
     /**
      * На сколько порций рассчитана техкарта, по умолчанию 1

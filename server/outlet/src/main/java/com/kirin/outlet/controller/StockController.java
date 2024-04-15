@@ -3,6 +3,7 @@ package com.kirin.outlet.controller;
 import com.kirin.outlet.model.StockItem;
 import com.kirin.outlet.model.UnitMeasure;
 import com.kirin.outlet.model.dto.StockItemDto;
+import com.kirin.outlet.model.dto.StockItemQuantityDto;
 import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.service.StockService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,13 +35,24 @@ public class StockController {
         return ResponseEntity.ok().body(stockService.getStockItemsList());
     }
 
+    @Operation(summary = "Создание позиции на складе",
+            description = "Возвращает созданную позицию на складе")
+    @PostMapping
+    public ResponseEntity<StockItem> createStockItem(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description =
+                    "Данные об имени и единице измерения для создания новой позиции на складе")
+            @RequestBody StockItemDto dto
+    ) {
+        return ResponseEntity.ok(stockService.createStockItem(dto));
+    }
+
     @Operation(summary = "Принятие поставки",
             description = "Возвращает список ID непринятых позиций")
     @PostMapping("/shipment")
     public ResponseEntity<List<Long>> acceptNewShipment(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Список ID позиций на складе и добавляемом количестве")
-            @RequestBody List<StockItemDto> shipment
+            @RequestBody List<StockItemQuantityDto> shipment
     ) {
         if (shipment.isEmpty())
             throw new IncorrectRequestDataException("Передан пустой список поставок");
@@ -52,7 +64,7 @@ public class StockController {
     @GetMapping("/{id}")
     public ResponseEntity<StockItem> getStockItem(
             @Parameter(name = "id", description = "StockItem id", example = "1")
-            @PathVariable("id") Long id
+            @PathVariable("id") long id
     ) {
         return ResponseEntity.ok(stockService.getStockItemById(id));
     }
@@ -69,7 +81,7 @@ public class StockController {
     @GetMapping("/um/{id}")
     public ResponseEntity<UnitMeasure> getUnitMeasure(
             @Parameter(name = "id", description = "UnitMeasure id", example = "1")
-            @PathVariable("id") Integer id
+            @PathVariable("id") int id
     ) {
         return ResponseEntity.ok(stockService.getUnitMeasureById(id));
     }
@@ -81,17 +93,5 @@ public class StockController {
     public ResponseEntity<List<StockItem>> getFreeStockItems() {
         return ResponseEntity.ok(stockService.getFreeStockItems());
     }
-
-    // @Operation(summary = "Добавление новой позиции на склад или внесение изменений",
-    //         description = "Для создания позиции требуется уникальное имя и ID единиц измерения. " +
-    //                 "Для внесения изменений должен быть указан существующий ID позиции.")
-    // @PostMapping()
-    // public ResponseEntity<StockItem> saveNewStockItem(
-    //         @io.swagger.v3.oas.annotations.parameters.RequestBody(
-    //                 description = "")
-    //         @RequestBody StockItem stockItem
-    // ) {
-    //     return ResponseEntity.ok(stockService.saveStockItem(stockItem));
-    // }
 
 }
