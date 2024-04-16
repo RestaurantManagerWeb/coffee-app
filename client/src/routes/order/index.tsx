@@ -44,6 +44,7 @@ function OrderList() {
       striped
       highlightOnHover
       stickyHeader
+      stickyHeaderOffset={59}
       withTableBorder
       withColumnBorders
     >
