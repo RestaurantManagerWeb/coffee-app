@@ -12,6 +12,7 @@ export const Route = createRootRoute({
 export const OrderContext = createContext<{
   items: { [id: number]: number };
   setOrderQuantity: (id: number, quantity: number) => void;
+  clear: () => void;
 } | null>(null);
 
 function Root() {
@@ -26,6 +27,9 @@ function Root() {
           const prevOrder = { ...prev, [id]: quantity };
           return prevOrder;
         });
+      },
+      clear: () => {
+        setOrder([]);
       },
     }),
     [order]

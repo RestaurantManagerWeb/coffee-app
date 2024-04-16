@@ -1,6 +1,7 @@
 import { Stack, Table, Button } from '@mantine/core';
 import { useContext, useMemo } from 'react';
 import { OrderContext } from '../routes/__root';
+import MenuItemName from './MenuItemName';
 
 function CurrentOrder() {
   const orderData = useContext(OrderContext);
@@ -10,13 +11,17 @@ function CurrentOrder() {
     return Object.entries(orderData.items).filter((item) => item[1]);
   }, [orderData]);
 
-  const rows = filteredItems.map((orderItem) => (
-    <Table.Tr key={orderItem[0]}>
-      <Table.Td>{orderItem[0]}</Table.Td>
-      <Table.Td></Table.Td>
-      <Table.Td>{orderItem[1]}</Table.Td>
-    </Table.Tr>
-  ));
+  const rows = filteredItems.map((orderItem) => {
+    return (
+      <Table.Tr key={orderItem[0]}>
+        <Table.Td>{orderItem[0]}</Table.Td>
+        <Table.Td>
+          <MenuItemName id={Number(orderItem[0])} />
+        </Table.Td>
+        <Table.Td>{orderItem[1]}</Table.Td>
+      </Table.Tr>
+    );
+  });
 
   function handleCreate() {
     (async () => {
@@ -39,6 +44,7 @@ function CurrentOrder() {
           body: JSON.stringify(body),
         });
         if (!res.ok) return;
+        orderData?.clear();
       } catch (error) {
         console.log(error);
         return;
@@ -57,10 +63,6 @@ function CurrentOrder() {
         stickyHeader
         withTableBorder
         withColumnBorders
-        data={{
-          head: ['ID', 'Quantity'],
-          body: filteredItems,
-        }}
       >
         <Table.Thead>
           <Table.Tr>
