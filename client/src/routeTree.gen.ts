@@ -11,13 +11,25 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as OrderIndexImport } from './routes/order/index'
 import { Route as MenuIndexImport } from './routes/menu/index'
+import { Route as OrderOrderIdImport } from './routes/order/$orderId'
 import { Route as MenuGroupGroupIdImport } from './routes/menu/group/$groupId'
 
 // Create/Update Routes
 
+const OrderIndexRoute = OrderIndexImport.update({
+  path: '/order/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const MenuIndexRoute = MenuIndexImport.update({
   path: '/menu/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const OrderOrderIdRoute = OrderOrderIdImport.update({
+  path: '/order/$orderId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -30,8 +42,16 @@ const MenuGroupGroupIdRoute = MenuGroupGroupIdImport.update({
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/order/$orderId': {
+      preLoaderRoute: typeof OrderOrderIdImport
+      parentRoute: typeof rootRoute
+    }
     '/menu/': {
       preLoaderRoute: typeof MenuIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/order/': {
+      preLoaderRoute: typeof OrderIndexImport
       parentRoute: typeof rootRoute
     }
     '/menu/group/$groupId': {
@@ -44,7 +64,9 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export const routeTree = rootRoute.addChildren([
+  OrderOrderIdRoute,
   MenuIndexRoute,
+  OrderIndexRoute,
   MenuGroupGroupIdRoute,
 ])
 

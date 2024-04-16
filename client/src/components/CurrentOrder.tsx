@@ -1,30 +1,30 @@
 import { Stack, Table, Button } from '@mantine/core';
-import { useContext } from 'react';
-import { OrderContext } from './routes/__root';
+import { useContext, useMemo } from 'react';
+import { OrderContext } from '../routes/__root';
 
-function Order() {
+function CurrentOrder() {
   const orderData = useContext(OrderContext);
 
-  const rows = orderData?.items
-    ? Object.entries(orderData?.items).map((orderItem) => (
-        <Table.Tr key={orderItem[0]}>
-          <Table.Td>{orderItem[0]}</Table.Td>
-          <Table.Td></Table.Td>
-          <Table.Td>{orderItem[1]}</Table.Td>
-        </Table.Tr>
-      ))
-    : [];
+  const filteredItems = useMemo(() => {
+    if (!orderData) return [];
+    return Object.entries(orderData.items).filter((item) => item[1]);
+  }, [orderData]);
+
+  const rows = filteredItems.map((orderItem) => (
+    <Table.Tr key={orderItem[0]}>
+      <Table.Td>{orderItem[0]}</Table.Td>
+      <Table.Td></Table.Td>
+      <Table.Td>{orderItem[1]}</Table.Td>
+    </Table.Tr>
+  ));
 
   function handleCreate() {
     (async () => {
       try {
-        if (!orderData?.items) return;
-        const items = Object.entries(orderData?.items)
-          .filter((item) => item[1])
-          .map((item) => ({
-            menuItemId: Number(item[0]),
-            quantity: item[1],
-          }));
+        const items = filteredItems.map((item) => ({
+          menuItemId: Number(item[0]),
+          quantity: item[1],
+        }));
 
         if (!items.length) return;
 
@@ -48,7 +48,9 @@ function Order() {
 
   return (
     <Stack>
-      <Button onClick={handleCreate}>Create</Button>
+      <Button onClick={handleCreate} disabled={filteredItems.length <= 0}>
+        Create
+      </Button>
       <Table
         striped
         highlightOnHover
@@ -57,7 +59,7 @@ function Order() {
         withColumnBorders
         data={{
           head: ['ID', 'Quantity'],
-          body: orderData?.items && Object.entries(orderData?.items),
+          body: filteredItems,
         }}
       >
         <Table.Thead>
@@ -73,4 +75,4 @@ function Order() {
   );
 }
 
-export default Order;
+export default CurrentOrder;

@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { MenuItem } from '../../../types';
 import { useContext, useEffect } from 'react';
-import QuantityInput from '../../../QuantityInput';
+import QuantityInput from '../../../components/QuantityInput';
 import { Box, SimpleGrid, Table } from '@mantine/core';
 import { OrderContext } from '../../__root';
-import Order from '../../../Order';
+import CurrentOrder from '../../../components/CurrentOrder';
 
 async function fetchMenuGroup(groupId: string) {
   const res = await fetch(`/api/outlet/menu/group/${groupId}`);
@@ -14,12 +14,7 @@ async function fetchMenuGroup(groupId: string) {
 
 export const Route = createFileRoute('/menu/group/$groupId')({
   component: MenuGroup,
-  beforeLoad: () => {
-    return { title: `Group` };
-  },
-  loader: async ({ params }) => {
-    return fetchMenuGroup(params.groupId);
-  },
+  loader: async ({ params }) => fetchMenuGroup(params.groupId),
 });
 
 function MenuGroup() {
@@ -67,7 +62,7 @@ function MenuGroup() {
           <Table.Tbody>{rows}</Table.Tbody>
         </Table>
       </Box>
-      <Order />
+      <CurrentOrder />
     </SimpleGrid>
   );
 }

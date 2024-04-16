@@ -13,3 +13,15 @@ export type MenuItem = {
   stockItemId: number;
   processChartId: number;
 };
+
+export type Order = {
+  id: number;
+  createdAt: string;
+  cancelledAt: string;
+  receiptId: number;
+  shoppingCarts: {
+    quantity: number;
+    menuItemId: number;
+    orderingId: number;
+  }[];
+};

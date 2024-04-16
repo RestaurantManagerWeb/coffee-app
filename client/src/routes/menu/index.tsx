@@ -2,7 +2,7 @@ import { Anchor, Card, Grid, SimpleGrid } from '@mantine/core';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { MenuGroup } from '../../types';
 import { useEffect, useState } from 'react';
-import Order from '../../Order';
+import CurrentOrder from '../../components/CurrentOrder';
 
 export const Route = createFileRoute('/menu/')({
   component: Menu,
@@ -16,7 +16,7 @@ function Menu() {
 
   useEffect(() => {
     (async () => {
-      const res = await fetch('/api/outlet/menu');
+      const res = await fetch('/api/outlet/menu/group');
 
       if (!res.ok) return;
       const data = await res.json();
@@ -42,7 +42,7 @@ function Menu() {
           </Grid.Col>
         ))}
       </Grid>
-      <Order />
+      <CurrentOrder />
     </SimpleGrid>
   );
 }

@@ -55,7 +55,7 @@ function Root() {
           <NavLink
             to="/order"
             component={Link}
-            label="Order"
+            label="Orders"
             active={location.pathname.startsWith('/order')}
           />
         </AppShell.Navbar>
