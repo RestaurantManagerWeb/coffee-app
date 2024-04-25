@@ -1,5 +1,6 @@
 package com.kirin.outlet.model.exception;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -16,12 +17,14 @@ public class ValidationExceptionBody {
      * Конструктор для задания информации об ошибке. Фиксируется дата и время создания.
      *
      * @param violations список полей, не прошедших валидацию
+     * @param code       код ответа
      * @param appName    имя приложения
      * @param excName    название исключения
      */
-    public ValidationExceptionBody(List<Violation> violations, String appName, String excName) {
-        if (violations != null) this.violations = violations;
-        else this.violations = new ArrayList<>();
+    public ValidationExceptionBody(@NotEmpty List<Violation> violations, int code,
+                                   String appName, String excName) {
+        this.violations = violations;
+        this.code = code;
         this.appName = appName;
         this.excName = excName;
         timestamp = LocalDateTime.now();
@@ -31,6 +34,11 @@ public class ValidationExceptionBody {
      * Имя сервиса (приложения), в котором возникла ошибка
      */
     private final String appName;
+
+    /**
+     * Код состояния ответа HTTP
+     */
+    private final int code;
 
     /**
      * Название исключения

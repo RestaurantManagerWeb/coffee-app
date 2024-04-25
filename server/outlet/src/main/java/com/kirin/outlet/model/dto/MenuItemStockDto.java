@@ -12,6 +12,24 @@ import java.math.BigDecimal;
 public class MenuItemStockDto {
 
     /**
+     * Конструктор для инициализации данных для создания позиции меню, связанной со штучной
+     * позицией на складе.
+     *
+     * @param name        название позиции меню
+     * @param price       цена в рублях
+     * @param vat         НДС в %. По умолчанию 10%
+     * @param menuGroupId ID группы меню
+     * @param stockItemId ID позиции на складе
+     */
+    public MenuItemStockDto(String name, BigDecimal price, Integer vat, int menuGroupId, long stockItemId) {
+        this.name = name;
+        this.price = price;
+        this.vat = vat;
+        this.menuGroupId = menuGroupId;
+        this.stockItemId = stockItemId;
+    }
+
+    /**
      * Название позиции
      */
     @NotBlank
@@ -23,11 +41,11 @@ public class MenuItemStockDto {
      * Цена в рублях
      */
     @DecimalMin(value = "1.0")
-    @Digits(integer=4, fraction=2)
+    @Digits(integer = 4, fraction = 2)
     private BigDecimal price;
 
     /**
-     * НДС в %. По умолчанию 0%
+     * НДС в %. По умолчанию 10%
      */
     @Min(0)
     @Max(100)
@@ -44,4 +62,5 @@ public class MenuItemStockDto {
      */
     @Positive
     private long stockItemId;
+
 }

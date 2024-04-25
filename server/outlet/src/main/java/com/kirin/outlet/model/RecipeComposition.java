@@ -1,12 +1,10 @@
 package com.kirin.outlet.model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 
@@ -15,7 +13,24 @@ import java.math.BigDecimal;
  */
 @Entity
 @Data
+@NoArgsConstructor
 public class RecipeComposition {
+
+    /**
+     * Конструктор для создания нового рецептурного компонента.
+     *
+     * @param processChartId ID связанной техкарты
+     * @param netto          норма расхода продукта в граммах или штуках
+     * @param ingredientId   ID связанного ингредиента
+     * @param semiFinishedId ID связанного полуфабриката
+     */
+    public RecipeComposition(Long processChartId, BigDecimal netto,
+                             Long ingredientId, Long semiFinishedId) {
+        this.processChartId = processChartId;
+        this.netto = netto;
+        this.ingredientId = ingredientId;
+        this.semiFinishedId = semiFinishedId;
+    }
 
     /**
      * Уникальный идентификатор рецептурного компонента
@@ -34,11 +49,18 @@ public class RecipeComposition {
      * Технологическая карта, к которой относится данный компонент. Двунаправленная связь
      * ManyToOne с сущностью технологической карты.
      */
+    @ToString.Exclude
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "process_chart_id", nullable = false,
+    @JoinColumn(name = "process_chart_id", nullable = false, insertable = false, updatable = false,
             foreignKey = @ForeignKey(name = "recipe_composition_pcid_fk"))
     private ProcessChart processChart;
+
+    /**
+     * Уникальный идентификатор связанной техкарты
+     */
+    @Column(name = "process_chart_id")
+    private Long processChartId;
 
     /**
      * Ингредиент (опционально).
@@ -46,13 +68,18 @@ public class RecipeComposition {
      * Значения могут повторяться. Если сущность рецептурного компонента
      * связана с полуфабрикатом, то данная связь должна быть null.
      */
-    @JsonProperty("ingredientId")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    @ManyToOne(fetch = FetchType.LAZY) // optional = true
-    @JoinColumn(name = "ingredient_id",
+    @ToString.Exclude
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ingredient_id", insertable = false, updatable = false,
             foreignKey = @ForeignKey(name = "recipe_composition_iid_fk"))
     private Ingredient ingredient;
+
+    /**
+     * Уникальный идентификатор связанного ингредиента
+     */
+    @Column(name = "ingredient_id")
+    private Long ingredientId;
 
     /**
      * Полуфабриакат (опционально).
@@ -60,12 +87,17 @@ public class RecipeComposition {
      * Значения могут повторяться. Если сущность рецептурного компонента
      * связана с ингредиентом, то данная связь должна быть null.
      */
-    @JsonProperty("semiFinishedId")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    @ManyToOne(fetch = FetchType.LAZY) // optional = true
-    @JoinColumn(name = "semi_finished_id",
+    @ToString.Exclude
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "semi_finished_id", insertable = false, updatable = false,
             foreignKey = @ForeignKey(name = "recipe_composition_sfid_fk"))
     private SemiFinished semiFinished;
+
+    /**
+     * Уникальный идентификатор связанного полуфабриката
+     */
+    @Column(name = "semi_finished_id")
+    private Long semiFinishedId;
 
 }

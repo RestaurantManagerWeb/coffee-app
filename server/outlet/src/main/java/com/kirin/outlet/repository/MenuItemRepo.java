@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface MenuItemRepo extends JpaRepository<MenuItem, Long> {
 
@@ -61,4 +62,13 @@ public interface MenuItemRepo extends JpaRepository<MenuItem, Long> {
      * @return список неудаленных позиций меню, связанных с позициями на складе
      */
     List<MenuItem> findByStockItemIdIsNotNullAndDeletedAtIsNull();
+
+    /**
+     * Получение списка неудаленных позиций меню с указанными ID.
+     *
+     * @param id множество ID
+     * @return список позиций меню с указанными ID
+     */
+    List<MenuItem> findByDeletedAtIsNullAndIdIn(Set<Long> id);
+
 }

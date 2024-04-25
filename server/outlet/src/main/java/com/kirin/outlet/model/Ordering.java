@@ -44,7 +44,7 @@ public class Ordering {
      * Дата и время создания заказа, по умолчанию текущее время. Нельзя изменить.
      */
     @ColumnDefault(value = "CURRENT_TIMESTAMP")
-    @Column(nullable = false, insertable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private Timestamp createdAt = Timestamp.valueOf(LocalDateTime.now());
 
     /**
@@ -65,4 +65,5 @@ public class Ordering {
      */
     @OneToMany(mappedBy = "ordering", fetch = FetchType.LAZY)
     private List<ShoppingCart> shoppingCarts;
+
 }

@@ -11,7 +11,7 @@ import org.hibernate.annotations.ColumnDefault;
 import java.math.BigDecimal;
 
 /**
- * Позиция меню. Например, капучино 200 мл, капучино 300 мл
+ * Позиция меню
  */
 @EqualsAndHashCode(callSuper = false)
 @Entity
@@ -24,7 +24,7 @@ public class MenuItem extends SoftDeletes {
      *
      * @param name        название позиции
      * @param price       цена в рублях
-     * @param vat         НДС в %. По умолчанию 0%
+     * @param vat         НДС в %. По умолчанию 10%
      * @param menuGroupId ID связанной группы меню
      * @param stockItemId ID связанной позиции на складе
      */
@@ -41,7 +41,7 @@ public class MenuItem extends SoftDeletes {
      *
      * @param name           название позиции
      * @param price          цена в рублях
-     * @param vat            НДС в %. По умолчанию 0%
+     * @param vat            НДС в %. По умолчанию 10%
      * @param processChartId ID связанной техкарты
      * @param menuGroupId    ID связанной группы меню
      */
@@ -73,11 +73,11 @@ public class MenuItem extends SoftDeletes {
     private BigDecimal price;
 
     /**
-     * НДС в %. По умолчанию 0%
+     * НДС в %. По умолчанию 10%
      */
-    @ColumnDefault(value = "0")
+    @ColumnDefault(value = "10")
     @Column(nullable = false, columnDefinition = "smallint")
-    private Integer vat = 0;
+    private Integer vat = 10;
 
     /**
      * Добавлена ли позиция в стоп-лист. По умолчанию false

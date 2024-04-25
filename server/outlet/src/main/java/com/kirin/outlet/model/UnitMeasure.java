@@ -6,13 +6,26 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Единицы измерения
  */
 @Entity
 @Data
+@NoArgsConstructor
 public class UnitMeasure {
+
+    /**
+     * Конструктор для создания новой единицы измерения.
+     *
+     * @param name   Уникальное название группы единиц измерения
+     * @param symbol Символьное обозначение
+     */
+    public UnitMeasure(String name, String symbol) {
+        this.name = name;
+        this.symbol = symbol;
+    }
 
     /**
      * Уникальный идентификатор единицы измерения
@@ -22,16 +35,15 @@ public class UnitMeasure {
     private Integer id;
 
     /**
-     * Уникальное название группы единиц измерения (масса, объем, количество)
+     * Уникальное название группы единиц измерения
      */
-    @Column(nullable = false, unique = true, columnDefinition = "varchar(20)",
-            insertable = false, updatable = false) /////
+    @Column(nullable = false, unique = true, columnDefinition = "varchar(20)", updatable = false)
     private String name;
 
     /**
-     * Символьное обозначение (г, мл, шт.)
+     * Символьное обозначение
      */
-    @Column(nullable = false, unique = true, columnDefinition = "varchar(5)",
-            insertable = false, updatable = false) /////
+    @Column(nullable = false, unique = true, columnDefinition = "varchar(5)", updatable = false)
     private String symbol;
+
 }

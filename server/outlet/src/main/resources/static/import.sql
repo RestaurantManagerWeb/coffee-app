@@ -1,3 +1,5 @@
+-- не учитывается
+
 -- unit_measure
 INSERT INTO unit_measure(name, symbol) VALUES ('масса', 'г');
 INSERT INTO unit_measure(name, symbol) VALUES ('объем', 'мл');
@@ -17,11 +19,14 @@ INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Яйцо кур
 INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Тунец консервированный рубленый', 483, 1);
 INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Вода н/г 0.5 л пластик', 21, 3);
 INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Зерно Бразилия 250 г', 3, 3);
+INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Зерно Бразилия', 8700, 1);
+INSERT INTO stock_item(name, quantity, unit_measure_id) VALUES ('Вода минеральная газ.', 2400, 2);
 
 -- processing_method
 INSERT INTO processing_method(name, description) VALUES ('без обработки', null);
-INSERT INTO processing_method(name, description) VALUES ('механическая', 'сортировка, мытье, очистка, промывание, нарезка');
+INSERT INTO processing_method(name, description) VALUES ('механическая обработка', 'сортировка, мытье, очистка, промывание, нарезка');
 INSERT INTO processing_method(name, description) VALUES ('тепловая (варка)', null);
+INSERT INTO processing_method(name, description) VALUES ('измельчение', null);
 
 -- ingredient
 INSERT INTO ingredient(name, weight_loss, stock_item_id, processing_method_id) VALUES ('Вода питьевая', 0, null, 1);
@@ -36,6 +41,7 @@ INSERT INTO ingredient(name, weight_loss, stock_item_id, processing_method_id) V
 INSERT INTO ingredient(name, weight_loss, stock_item_id, processing_method_id) VALUES ('Огурец свежий', 5, 9, 2);
 INSERT INTO ingredient(name, weight_loss, stock_item_id, processing_method_id) VALUES ('Яйцо куриное отварное', 0, 10, 3);
 INSERT INTO ingredient(name, weight_loss, stock_item_id, processing_method_id) VALUES ('Тунец рубленый', 22, 11, 1);
+INSERT INTO ingredient(name, weight_loss, stock_item_id, processing_method_id) VALUES ('Вода газ.', 0, 15, 1);
 
 -- process_chart
 INSERT INTO process_chart(yield, portion, description) VALUES (300, DEFAULT, 'Добавить в стакан гостя дольку лимона, заварку в одноразовом пакетике, ягодное пюре и кипяток. Хорошо перемешать и удалить заварку');
@@ -72,6 +78,7 @@ INSERT INTO recipe_composition(process_chart_id, ingredient_id, semi_finished_id
 INSERT INTO menu_group(name) VALUES('Чай');
 INSERT INTO menu_group(name) VALUES('Покупные товары');
 INSERT INTO menu_group(name) VALUES('Сэндвичи');
+INSERT INTO menu_group(name) VALUES('Лимонады');
 
 -- menu_item
 INSERT INTO menu_item(name, price, vat, in_stop_list, menu_group_id, stock_item_id, process_chart_id) VALUES('Чай ягодный 300 мл', 220, DEFAULT, DEFAULT, 1, null, 1);
@@ -96,7 +103,7 @@ INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(3, 1, 1);
 INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(4, 1, 1);
 INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(5, 2, 1);
 INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(5, 1, 2);
-INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(6, 1, 1);
+INSERT INTO shopping_cart(ordering_id, menu_item_id, quantity) VALUES(6, 4, 1);
 
 
 

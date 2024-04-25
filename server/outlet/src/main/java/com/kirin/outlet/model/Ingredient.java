@@ -1,18 +1,33 @@
 package com.kirin.outlet.model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIdentityReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * Пищевой ингредиент
  */
 @Entity
 @Data
+@NoArgsConstructor
 public class Ingredient {
+
+    /**
+     * Конструктор для создания ингредиента.
+     *
+     * @param name               уникальное название ингредиента
+     * @param processingMethodId ID связанного метода обработки
+     * @param weightLoss         процент потерь при обработке
+     * @param stockItemId        ID связанной позиции на складе
+     */
+    public Ingredient(String name, int processingMethodId, int weightLoss, Long stockItemId) {
+        this.name = name;
+        this.processingMethodId = processingMethodId;
+        this.weightLoss = weightLoss;
+        this.stockItemId = stockItemId;
+    }
 
     /**
      * Уникальный идентификатор ингредиента
@@ -34,25 +49,36 @@ public class Ingredient {
     private Integer weightLoss;
 
     /**
-     * Позиция на складе. Однонаправленная связь ManyToOne с сущностью склада.
-     * Может быть null у ингредиентов с неучитываемым расходом, например, вода, лед.
+     * Позиция на складе. Однонаправленная связь ManyToOne с сущностью позиции на складе.
+     * Может быть null.
      */
-    @JsonProperty("stockItemId")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stock_item_id", foreignKey = @ForeignKey(name = "ingredient_siid_fk"))
+    @ToString.Exclude
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "stock_item_id", insertable = false, updatable = false,
+            foreignKey = @ForeignKey(name = "ingredient_siid_fk"))
     private StockItem stockItem;
 
     /**
-     * Метод обработки. Однонаправленная связь ManyToOne с сущностью матода обработки.
+     * Уникальный идентификатор связанной позиции на складе
      */
-    @JsonProperty("processingMethodId")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @Column(name = "stock_item_id")
+    private Long stockItemId;
+
+    /**
+     * Метод обработки. Однонаправленная связь ManyToOne с сущностью метода обработки.
+     */
+    @ToString.Exclude
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "processing_method_id", nullable = false,
-            foreignKey = @ForeignKey(name = "ingredient_pmid_fk"))
+    @JoinColumn(name = "processing_method_id", insertable = false, updatable = false,
+            nullable = false, foreignKey = @ForeignKey(name = "ingredient_pmid_fk"))
     private ProcessingMethod processingMethod;
+
+    /**
+     * Уникальный идентификатор связанного метода обработки
+     */
+    @Column(name = "processing_method_id")
+    private Integer processingMethodId;
 
 }

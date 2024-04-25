@@ -2,12 +2,11 @@ package com.kirin.outlet.controller;
 
 import com.kirin.outlet.model.Ordering;
 import com.kirin.outlet.model.dto.OrderDto;
-import com.kirin.outlet.model.exception.OrderTransactionException;
 import com.kirin.outlet.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,29 +33,25 @@ public class OrderController {
     @PostMapping()
     public ResponseEntity<Long> createOrder(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "ID чека и пробитые позиции")
+                    description = "ID чека и пробитые позиции",
+                    content = @Content(examples = {@ExampleObject(
+                            value = "{\"receiptId\":8,\"shoppingCartItems\":[" +
+                                    "{\"menuItemId\":1,\"quantity\":2}," +
+                                    "{\"menuItemId\":2,\"quantity\":1}," +
+                                    "{\"menuItemId\":3,\"quantity\":1}]}"
+                    )}))
             @RequestBody OrderDto orderData
     ) {
-        orderService.checkDataForCreateOrder(orderData);
-        try {
-            long orderId = orderService.createNewOrdering(orderData);
-            return ResponseEntity.ok().body(orderId);
-        } catch (Exception e) {
-            throw new OrderTransactionException(
-                    "Ошибка создания заказа: " + orderData + ". " + e.getMessage(), e);
-        }
+        return ResponseEntity.ok().body(orderService.createNewOrdering(orderData));
     }
 
     @Operation(summary = "Получение информации о заказе по ID",
             description = "Возвращает данные о найденном заказе и списке пробитых позиций")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Ok"),
-            @ApiResponse(responseCode = "404", description = "Not found - The Ordering was not found")
-    })
     @GetMapping("/{id}")
     public ResponseEntity<Ordering> getOrdering(
             @Parameter(name = "id", description = "Ordering id", example = "1")
-            @PathVariable("id") Long id) {
+            @PathVariable("id") long id
+    ) {
         return ResponseEntity.ok(orderService.getOrderingById(id));
     }
 
@@ -64,7 +59,7 @@ public class OrderController {
     @PostMapping("/cancel/{id}")
     public ResponseEntity<Void> cancelOrdering(
             @Parameter(name = "id", description = "Ordering id", example = "1")
-            @PathVariable("id") Long id
+            @PathVariable("id") long id
     ) {
         orderService.cancelOrderingById(id);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -76,7 +71,8 @@ public class OrderController {
     @GetMapping("/date/{date}")
     public ResponseEntity<List<Ordering>> getOrdersByDate(
             @Parameter(name = "date", description = "Date (format: yyyy-MM-dd)", example = "2024-01-15")
-            @PathVariable("date") String date) {
+            @PathVariable("date") String date
+    ) {
         return ResponseEntity.ok(orderService.getOrderingListByDate(date));
     }
 

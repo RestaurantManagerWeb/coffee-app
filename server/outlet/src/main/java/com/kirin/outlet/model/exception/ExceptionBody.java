@@ -14,11 +14,13 @@ public class ExceptionBody {
      * Конструктор для задания информации об ошибке. Фиксируется дата и время создания.
      *
      * @param message сообщение об ошибке
+     * @param code    код состояния ответа HTTP
      * @param appName имя приложения
      * @param excName название исключения
      */
-    public ExceptionBody(String message, String appName, String excName) {
+    public ExceptionBody(String message, int code, String appName, String excName) {
         this.message = message;
+        this.code = code;
         this.appName = appName;
         this.excName = excName;
         timestamp = LocalDateTime.now();
@@ -28,6 +30,11 @@ public class ExceptionBody {
      * Имя сервиса (приложения), в котором возникла ошибка
      */
     private final String appName;
+
+    /**
+     * Код состояния ответа HTTP
+     */
+    private final int code;
 
     /**
      * Название исключения

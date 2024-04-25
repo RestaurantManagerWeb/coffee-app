@@ -11,9 +11,10 @@ public class RecipeCompositionDto implements Comparable<RecipeCompositionDto> {
 
     /**
      * Конструктор для задания информации о входящем в состав ингредиенте.
+     *
      * @param recipeComposition рецептурный компонент
-     * @param name название ингредиента
-     * @param isPieceUnit является ли ингредиент штучным
+     * @param name              название ингредиента
+     * @param isPieceUnit       является ли ингредиент штучным
      */
     public RecipeCompositionDto(RecipeComposition recipeComposition,
                                 String name, boolean isPieceUnit) {
@@ -24,8 +25,9 @@ public class RecipeCompositionDto implements Comparable<RecipeCompositionDto> {
 
     /**
      * Конструктор для задания информации о входящем в состав полуфабрикате.
+     *
      * @param recipeComposition рецептурный компонент
-     * @param name название полуфабриката
+     * @param name              название полуфабриката
      */
     public RecipeCompositionDto(RecipeComposition recipeComposition, String name) {
         this.recipeComposition = recipeComposition;
@@ -49,6 +51,7 @@ public class RecipeCompositionDto implements Comparable<RecipeCompositionDto> {
 
     /**
      * Сравнение рецептурных компонентов по их ID.
+     *
      * @param o объект для сравнения с текущим
      * @return результат сравнения
      */

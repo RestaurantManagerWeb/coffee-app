@@ -103,7 +103,7 @@ psql -U sa -d outlet_db
 {
   "name": "вода н/г 0.5 л, пластик",
   "price": 100,
-  "vat": 10,
+  "vat": null,
   "menuGroupId": 2,
   "stockItemId": 12
 }
@@ -112,7 +112,7 @@ psql -U sa -d outlet_db
 ```json
 {
   "name": "Зерно Бразилия, 250 г",
-  "price": 1700,
+  "price": 750,
   "vat": 20,
   "menuGroupId": 2,
   "stockItemId": 13
@@ -147,5 +147,84 @@ psql -U sa -d outlet_db
 {
   "name": "сыр творожный сливочный",
   "unitMeasureId": 1
+}
+```
+
+6. [(POST) /ingr](http://localhost:8765/outlet/ingr) - создание нового ингредиента
+
+```json
+{
+  "name": "молотый кофе, Бразилия",
+  "processingMethodId": 4,
+  "weightLoss": 3,
+  "stockItemId": 14
+}
+```
+
+7. [(POST) /ingr/pm](http://localhost:8765/outlet/ingr/pm) - создание нового метода обработки
+
+```json
+{
+  "name": "выпекание",
+  "description": null
+}
+```
+
+8. [(POST) /cook/sf](http://localhost:8765/outlet/cook/sf) - создание нового полуфабриката
+
+```json
+{
+  "name": "лимонный сок",
+  "processChart": {
+    "description": "Лимонный фреш.",
+    "yield": 100,
+    "portion": 1
+  },
+  "recipeCompositions": [
+    {
+      "netto": 160,
+      "ingredientId": 3,
+      "semiFinishedId": null
+    }
+  ]
+}
+```
+
+9. [(POST) /menu/item/pc](http://localhost:8765/outlet/menu/item/pc) - создание новой позиции меню, связанной
+   с техкартой
+
+```json
+{
+  "name": "лимонад с лимоном и огурцом",
+  "price": 180,
+  "vat": 10,
+  "menuGroupId": 4,
+  "processChart": {
+    "description": "Насыпать лед, положить дольку лимона и нарезанный слайсами огурец, залить минералкой.",
+    "yield": 300,
+    "portion": 1
+  },
+  "recipeCompositions": [
+    {
+      "netto": 150,
+      "ingredientId": 2,
+      "semiFinishedId": null
+    },
+    {
+      "netto": 20,
+      "ingredientId": 3,
+      "semiFinishedId": null
+    },
+    {
+      "netto": 30,
+      "ingredientId": 10,
+      "semiFinishedId": null
+    },
+    {
+      "netto": 130,
+      "ingredientId": 13,
+      "semiFinishedId": null
+    }
+  ]
 }
 ```

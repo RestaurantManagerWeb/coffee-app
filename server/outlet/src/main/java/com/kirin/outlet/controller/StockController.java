@@ -4,10 +4,11 @@ import com.kirin.outlet.model.StockItem;
 import com.kirin.outlet.model.UnitMeasure;
 import com.kirin.outlet.model.dto.StockItemDto;
 import com.kirin.outlet.model.dto.StockItemQuantityDto;
-import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.service.StockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +41,10 @@ public class StockController {
     @PostMapping
     public ResponseEntity<StockItem> createStockItem(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description =
-                    "Данные об имени и единице измерения для создания новой позиции на складе")
+                    "Данные об имени и единице измерения для создания новой позиции на складе",
+                    content = @Content(examples = {@ExampleObject(
+                            value = "{\"name\":\"сыр творожный сливочный\",\"unitMeasureId\":1}"
+                    )}))
             @RequestBody StockItemDto dto
     ) {
         return ResponseEntity.ok(stockService.createStockItem(dto));
@@ -51,11 +55,14 @@ public class StockController {
     @PostMapping("/shipment")
     public ResponseEntity<List<Long>> acceptNewShipment(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Список ID позиций на складе и добавляемом количестве")
+                    description = "Список с данными об ID позиции на складе и добавляемом количестве",
+                    content = @Content(examples = {@ExampleObject(
+                            value = "[{\"stockItemId\":1,\"quantity\":49}," +
+                                    "{\"stockItemId\":3,\"quantity\":215.5}," +
+                                    "{\"stockItemId\":6,\"quantity\":12}]"
+                    )}))
             @RequestBody List<StockItemQuantityDto> shipment
     ) {
-        if (shipment.isEmpty())
-            throw new IncorrectRequestDataException("Передан пустой список поставок");
         return ResponseEntity.ok(stockService.acceptIncomingInventoryShipments(shipment));
     }
 

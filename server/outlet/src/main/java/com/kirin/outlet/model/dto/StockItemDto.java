@@ -13,6 +13,17 @@ import lombok.Getter;
 public class StockItemDto {
 
     /**
+     * Конструктор для инициализации данных для создания позиции на складе.
+     *
+     * @param name          название позиции
+     * @param unitMeasureId ID единицы измерения
+     */
+    public StockItemDto(String name, int unitMeasureId) {
+        this.name = name;
+        this.unitMeasureId = unitMeasureId;
+    }
+
+    /**
      * Название позиции
      */
     @NotBlank
@@ -21,7 +32,7 @@ public class StockItemDto {
     private String name;
 
     /**
-     * Уникальный идентификатор единицы измерения
+     * ID единицы измерения
      */
     @Positive
     private int unitMeasureId;

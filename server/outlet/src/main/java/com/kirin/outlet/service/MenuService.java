@@ -1,13 +1,14 @@
 package com.kirin.outlet.service;
 
+import com.kirin.outlet.model.Ingredient;
 import com.kirin.outlet.model.MenuGroup;
 import com.kirin.outlet.model.MenuItem;
 import com.kirin.outlet.model.StockItem;
 import com.kirin.outlet.model.dto.CookGroupDto;
 import com.kirin.outlet.model.dto.CookMenuItemDto;
 import com.kirin.outlet.model.dto.MenuGroupDto;
+import com.kirin.outlet.model.dto.MenuItemPCDto;
 import com.kirin.outlet.model.dto.MenuItemStockDto;
-import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
 import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
 import com.kirin.outlet.repository.MenuGroupRepo;
@@ -16,6 +17,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
@@ -24,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Validated
 @Service
@@ -81,6 +85,19 @@ public class MenuService {
     public MenuItem getMenuItemById(@Positive long id) {
         Optional<MenuItem> menuItem = menuItemRepo.findByIdAndDeletedAtIsNull(id);
         if (menuItem.isEmpty())
+            throw new ItemNotFoundException("Позиция меню с ID = " + id + " не найдена либо удалена");
+        return menuItem.get();
+    }
+
+    /**
+     * Получение позиции меню по ID.
+     *
+     * @param id уникальный идентификатор позиции меню
+     * @return позицию меню с указанным ID
+     */
+    public MenuItem getMenuItemWithDeletedById(@Positive long id) {
+        Optional<MenuItem> menuItem = menuItemRepo.findById(id);
+        if (menuItem.isEmpty())
             throw new ItemNotFoundException("Позиция меню с ID = " + id + " не найдена");
         return menuItem.get();
     }
@@ -107,16 +124,13 @@ public class MenuService {
      */
     public MenuGroup createMenuGroup(@Valid MenuGroupDto dto) {
         List<MenuGroup> findMenuGroups = menuGroupRepo.findByNameIgnoreCase(dto.getName());
-        if (findMenuGroups.size() == 1)
+        if (findMenuGroups.size() > 0)
             return findMenuGroups.get(0);
-        if (findMenuGroups.isEmpty()) {
-            String name = Character.toUpperCase(dto.getName().charAt(0))
-                    + dto.getName().substring(1);
-            MenuGroup menuGroup = new MenuGroup();
-            menuGroup.setName(name);
-            return menuGroupRepo.save(menuGroup);
-        } else throw new IncorrectDataInDatabaseException("Значение name = '" + dto.getName()
-                + "' в таблице menu_group среди неудаленных позиций не уникально");
+        String name = Character.toUpperCase(dto.getName().charAt(0))
+                + dto.getName().substring(1);
+        MenuGroup menuGroup = new MenuGroup();
+        menuGroup.setName(name);
+        return menuGroupRepo.save(menuGroup);
     }
 
     /**
@@ -144,7 +158,7 @@ public class MenuService {
     }
 
     /**
-     * Мягкое удаление позиции меню и полное удаление связанной техкарты при наличии.
+     * Мягкое удаление позиции меню.
      *
      * @param item позиция меню для удаления
      */
@@ -152,13 +166,10 @@ public class MenuService {
         item.setDelete();
         item.setMenuGroupId(null);
         menuItemRepo.save(item);
-        if (item.getProcessChartId() != null) {
-            cookingService.deleteProcessChart(item.getProcessChart());
-        }
     }
 
     /**
-     * Мягкое удаление позиции меню по ID и полное удаление связанной техкарты при наличии.
+     * Мягкое удаление позиции меню по ID.
      *
      * @param id уникальный идентификатор позиции меню, которую нужно удалить
      */
@@ -183,7 +194,7 @@ public class MenuService {
                 + dto.getName().substring(1);
         MenuItem menuItem = new MenuItem(
                 name, dto.getPrice(), dto.getVat(), dto.getMenuGroupId(), dto.getStockItemId());
-        long sameId = getIdSameDeletedMenuItem(menuItem);
+        long sameId = getIdSameDeletedMenuItem(menuItem); // TODO: сократить количество запросов
         if (sameId > 0) menuItem.setId(sameId);
         return menuItemRepo.save(menuItem);
     }
@@ -225,7 +236,8 @@ public class MenuService {
         StockItem stockItem = stockService.getStockItemById(dto.getStockItemId());
         // TODO: магические ед. измер.
         if (stockItem.getUnitMeasure().getId() != 3)
-            throw new IncorrectRequestDataException("Позиция на складе должна быть штучной");
+            throw new IncorrectRequestDataException("createMenuItemWithStockItem.dto.stockItemId",
+                    "Позиция на складе должна быть штучной");
         checkUniqueStockItemId(dto.getStockItemId());
     }
 
@@ -237,13 +249,9 @@ public class MenuService {
      */
     private void checkUniqueMenuItemName(String name) {
         List<MenuItem> menuItems = menuItemRepo.findByNameIgnoreCaseAndDeletedAtIsNull(name);
-        if (menuItems.size() == 1)
-            throw new IncorrectRequestDataException("Уже существует позиция меню с именем '"
-                    + name + "' (ID = " + menuItems.get(0).getId() + ")");
-        else if (menuItems.size() > 1)
-            throw new IncorrectDataInDatabaseException(
-                    "Значение name = '" + name
-                            + "' в таблице menu_item среди неудаленных позиций не уникально");
+        if (menuItems.size() > 0)
+            throw new IncorrectRequestDataException(
+                    "checkUniqueMenuItemName.name", "Имя позиции меню не уникально");
     }
 
     /**
@@ -252,14 +260,12 @@ public class MenuService {
      *
      * @param stockItemId ID позиции на складе для проверки уникальности
      */
-    private void checkUniqueStockItemId(@Positive long stockItemId) {
+    private void checkUniqueStockItemId(long stockItemId) {
         List<MenuItem> items = menuItemRepo.findByStockItemIdAndDeletedAtIsNull(stockItemId);
-        if (items.size() == 1) throw new IncorrectRequestDataException(
+        if (items.size() > 0) throw new IncorrectRequestDataException(
+                "checkUniqueStockItemId.stockItemId",
                 "Уже существует позиция меню (ID = " + items.get(0).getId()
                         + ") для продажи позиции на складе с ID = " + stockItemId);
-        else if (items.size() > 1) throw new IncorrectDataInDatabaseException(
-                "Значение stock_item_id = " + stockItemId
-                        + " в таблице menu_item среди неудаленных позиций не уникально");
     }
 
     /**
@@ -306,6 +312,67 @@ public class MenuService {
 
         for (var cookGroup : positions.entrySet()) {
             cookGroup.getValue().setName(groupsName.get(cookGroup.getKey()));
+        }
+    }
+
+    /**
+     * Проверка данных и создание позиции меню, связанной с ней техкарты и рецептурных компонентов.
+     *
+     * @param dto данные для создания позиции меню, техкарты и рецептурных компонентов
+     * @return созданная позиция меню
+     */
+    public MenuItem createMenuItemWithProcessChart(@Valid MenuItemPCDto dto) {
+        checkCorrectMenuItemPCDto(dto);
+        try {
+            return createMenuItemAndProcessChart(dto);
+        } catch (Exception e) {
+            throw new CannotCreateTransactionException(
+                    "Не удалось создать позицию меню. " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Проверка на валидность данных для создания позиции меню и связанной техкарты.
+     * Должны быть указаны существующие группа меню, уникальное имя позиции, валидные
+     * данные для создания техкарты.
+     *
+     * @param dto данные для проверки
+     */
+    private void checkCorrectMenuItemPCDto(MenuItemPCDto dto) {
+        getMenuGroupById(dto.getMenuGroupId());
+        checkUniqueMenuItemName(dto.getName());
+        cookingService.checkCorrectRecipeCompositions(dto.getRecipeCompositions());
+    }
+
+    /**
+     * Транзакция. Создание связанных техкарты, рецептурных компонентов и позиции меню.
+     *
+     * @param dto данные для создания объектов
+     * @return созданная позиция меню
+     */
+    @Transactional
+    private MenuItem createMenuItemAndProcessChart(MenuItemPCDto dto) {
+        long pcId = cookingService.createProcessChartAndRecipeCompositions(
+                dto.getProcessChart(), dto.getRecipeCompositions());
+        String name = Character.toUpperCase(dto.getName().charAt(0))
+                + dto.getName().substring(1);
+        // TODO: проверка на равные удаленные позиции
+        return menuItemRepo.save(new MenuItem(name, dto.getPrice(), dto.getVat(),
+                pcId, dto.getMenuGroupId()));
+    }
+
+    /**
+     * Проверка наличия всех указанных позиций меню по их ID.
+     *
+     * @param idSet множество ID позиций меню для проверки
+     */
+    public void checkPresentAllMenuItemsById(Set<Long> idSet) {
+        List<MenuItem> menuItems = menuItemRepo.findByDeletedAtIsNullAndIdIn(idSet);
+        if (menuItems.size() < idSet.size()) {
+            idSet.removeAll(menuItems.stream()
+                    .mapToLong(MenuItem::getId)
+                    .boxed().collect(Collectors.toSet()));
+            throw new ItemNotFoundException("Не найдены или удалены позиции меню с ID = " + idSet);
         }
     }
 

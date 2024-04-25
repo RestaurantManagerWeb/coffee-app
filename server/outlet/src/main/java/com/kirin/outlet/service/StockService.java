@@ -7,13 +7,13 @@ import com.kirin.outlet.model.UnitMeasure;
 import com.kirin.outlet.model.dto.ShopCartItemDto;
 import com.kirin.outlet.model.dto.StockItemDto;
 import com.kirin.outlet.model.dto.StockItemQuantityDto;
-import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
 import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
 import com.kirin.outlet.repository.MenuItemRepo;
 import com.kirin.outlet.repository.StockItemRepo;
 import com.kirin.outlet.repository.UnitMeasureRepo;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -46,7 +46,9 @@ public class StockService {
      * @param shipment поставляемые продукты (ID позиций на складе и добавляемое количество)
      * @return список ID непринятых позиций, может быть пустым
      */
-    public List<Long> acceptIncomingInventoryShipments(List<@Valid StockItemQuantityDto> shipment) {
+    public List<Long> acceptIncomingInventoryShipments(
+            @NotEmpty List<@Valid StockItemQuantityDto> shipment
+    ) {
         List<Long> rejection = new ArrayList<>();
         StockItem stockItem;
         for (StockItemQuantityDto item : shipment) {
@@ -121,29 +123,23 @@ public class StockService {
      * @param id    идентификатор продукта (товара) на складе
      * @param count количество для списания
      */
-    public void writeOffProduct(Long id, Double count) {
-        Optional<StockItem> sItem = stockItemRepo.findById(id);
-        if (sItem.isEmpty()) {
-            throw new ItemNotFoundException(
-                    "Не найдена позиция на складе с ID = " + id + ". Нельзя списать продукт");
-        }
-        sItem.get().setQuantity(
-                sItem.get().getQuantity().subtract(BigDecimal.valueOf(count)));
-        stockItemRepo.save(sItem.get());
+    public void writeOffProduct(Long id, Double count) { // TODO: не используется
+        StockItem sItem = getStockItemById(id);
+        sItem.setQuantity(sItem.getQuantity().subtract(BigDecimal.valueOf(count)));
+        stockItemRepo.save(sItem);
         // TODO: рассылка уведомлений о проблемах со складом
-        if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) == 0) {
+        if (sItem.getQuantity().compareTo(BigDecimal.ZERO) == 0) {
             System.err.printf("На складе закончилась позиция с ID = %d (%s)\n",
-                    id, sItem.get().getName());
-        } else if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) < 0) {
+                    id, sItem.getName());
+        } else if (sItem.getQuantity().compareTo(BigDecimal.ZERO) < 0) {
             System.err.println(new StringBuilder("Запасы позиции с ID = ")
                     .append(id)
                     .append(" (")
-                    .append(sItem.get().getName())
+                    .append(sItem.getName())
                     .append(") меньше 0 (")
-                    .append(sItem.get().getQuantity())
+                    .append(sItem.getQuantity())
                     .append(")"));
         }
-
     }
 
     public void writeOffProductsFromStock(List<ShopCartItemDto> shoppingCartItems) {
@@ -200,13 +196,8 @@ public class StockService {
      */
     private void checkUniqueStockItemName(String name) {
         List<StockItem> items = stockItemRepo.findByNameIgnoreCase(name);
-        if (items.size() == 1)
-            throw new IncorrectRequestDataException("Уже существует позиция на складе с именем '"
-                    + name + "' (ID = " + items.get(0).getId() + ")");
-        else if (items.size() > 1)
-            throw new IncorrectDataInDatabaseException(
-                    "Значение name = '" + name
-                            + "' в таблице menu_item среди неудаленных позиций не уникально");
+        if (items.size() > 0) throw new IncorrectRequestDataException(
+                "checkUniqueStockItemName.name", "Имя позиции на складе не уникально");
     }
 
 }
