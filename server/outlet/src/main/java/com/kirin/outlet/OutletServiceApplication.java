@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @OpenAPIDefinition(info = @Info(title = "Outlet Service", version = "1.0",
         description = "Documentation Outlet Service v1.0"),
         servers = {
-                @Server(url = "http://localhost:${server.port}", description = "Описание сервера")
+                @Server(url = "/outlet", description = "Сервис для работы с заказами на предприятии")
         })
 public class OutletServiceApplication {
 
