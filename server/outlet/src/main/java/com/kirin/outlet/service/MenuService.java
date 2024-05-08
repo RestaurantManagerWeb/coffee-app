@@ -1,6 +1,5 @@
 package com.kirin.outlet.service;
 
-import com.kirin.outlet.model.Ingredient;
 import com.kirin.outlet.model.MenuGroup;
 import com.kirin.outlet.model.MenuItem;
 import com.kirin.outlet.model.StockItem;
@@ -29,6 +28,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис для работы с позициями и группами меню
+ */
 @Validated
 @Service
 @RequiredArgsConstructor
@@ -90,7 +92,7 @@ public class MenuService {
     }
 
     /**
-     * Получение позиции меню по ID.
+     * Получение позиции меню по ID, в том числе удаленной.
      *
      * @param id уникальный идентификатор позиции меню
      * @return позицию меню с указанным ID
@@ -234,7 +236,6 @@ public class MenuService {
         getMenuGroupById(dto.getMenuGroupId());
         checkUniqueMenuItemName(dto.getName());
         StockItem stockItem = stockService.getStockItemById(dto.getStockItemId());
-        // TODO: магические ед. измер.
         if (stockItem.getUnitMeasure().getId() != 3)
             throw new IncorrectRequestDataException("createMenuItemWithStockItem.dto.stockItemId",
                     "Позиция на складе должна быть штучной");

@@ -1,6 +1,5 @@
 package com.kirin.outlet.model.dto;
 
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -29,7 +28,6 @@ public class ProcessChartNewDto {
     /**
      * Описание приготовления, может быть null
      */
-    @Nullable
     @Size(max = 3000)
     @Pattern(regexp = "^[\\w\\sА-ЯЁа-яё\\-,%/№^&*!?#+=\\.:;'\"()]{3,}")
     private String description;
@@ -43,7 +41,6 @@ public class ProcessChartNewDto {
     /**
      * На сколько порций рассчитана техкарта, по умолчанию 1
      */
-    @Nullable
     @Min(1)
     private Integer portion;
 

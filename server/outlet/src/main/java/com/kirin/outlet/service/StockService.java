@@ -55,7 +55,6 @@ public class StockService {
             Optional<StockItem> sItem = stockItemRepo.findById(item.getStockItemId());
             if (sItem.isPresent()) {
                 stockItem = sItem.get();
-                // TODO: ссылка на магические единицы измерения
                 if (stockItem.getUnitMeasure().getId() == 3 && item.getQuantity() % 1 != 0) {
                     rejection.add(item.getStockItemId());
                 } else {
@@ -123,7 +122,8 @@ public class StockService {
      * @param id    идентификатор продукта (товара) на складе
      * @param count количество для списания
      */
-    public void writeOffProduct(Long id, Double count) { // TODO: не используется
+    // TODO: не используется
+    public void writeOffProduct(Long id, Double count) {
         StockItem sItem = getStockItemById(id);
         sItem.setQuantity(sItem.getQuantity().subtract(BigDecimal.valueOf(count)));
         stockItemRepo.save(sItem);
@@ -163,7 +163,7 @@ public class StockService {
      * @return список найденных позиций на складе
      */
     public List<StockItem> getFreeStockItems() {
-        List<StockItem> stockItems = stockItemRepo.findByUnitMeasureIdIs(3); // TODO: ед.измер.
+        List<StockItem> stockItems = stockItemRepo.findByUnitMeasureIdIs(3);
         List<MenuItem> menuItems = menuItemRepo.findByStockItemIdIsNotNullAndDeletedAtIsNull();
         List<Long> menuStockItems = menuItems.stream()
                 .mapToLong(item -> item.getStockItemId())

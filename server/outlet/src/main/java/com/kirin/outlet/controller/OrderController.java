@@ -65,7 +65,7 @@ public class OrderController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @Operation(summary = "Получение списка созданных заказов в указанную дату",
+    @Operation(summary = "Получение списка заказов, созданных в указанную дату",
             description = "Возвращает данные о найденных заказах и списке пробитых позиций. " +
                     "Список отсортирован по ID заказа в обратном порядке")
     @GetMapping("/date/{date}")
@@ -76,7 +76,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderingListByDate(date));
     }
 
-    @Operation(summary = "Получение списка созданных заказов в текущий день",
+    @Operation(summary = "Получение списка заказов, созданных в текущий день",
             description = "Возвращает данные о найденных заказах и списке пробитых позиций. " +
                     "Список отсортирован по ID заказа в обратном порядке")
     @GetMapping("/date/current")

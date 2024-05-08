@@ -1,6 +1,5 @@
 package com.kirin.outlet.service;
 
-import com.kirin.outlet.model.MenuItem;
 import com.kirin.outlet.model.Ordering;
 import com.kirin.outlet.model.ShoppingCart;
 import com.kirin.outlet.model.dto.OrderDto;
@@ -22,7 +21,6 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -75,7 +73,8 @@ public class OrderService {
 
         saveShoppingCart(order.getId(), orderData.getShoppingCartItems());
 
-        // TODO: доделать списание продуктов со склада после продажи
+        // TODO: доделать списание продуктов со склада после продажи,
+        //  переделать на связь с menuService
         stockService.writeOffProductsFromStock(orderData.getShoppingCartItems());
 
         return order.getId();
@@ -147,6 +146,9 @@ public class OrderService {
             throw new IncorrectRequestDataException(
                     "getOrderingListByDate.date", "Некорректный формат даты в параметре запроса");
         }
+        if (targetDate.isAfter(LocalDate.now()))
+            throw new IncorrectRequestDataException(
+                    "getOrderingListByDate.date", "Передана дата после текущей");
         return getOrdersByDate(targetDate);
     }
 
@@ -168,8 +170,6 @@ public class OrderService {
      * @return отсортированный список найденных заказов
      */
     private List<Ordering> getOrdersByDate(LocalDate date) {
-        if (date.isAfter(LocalDate.now()))
-            throw new IncorrectRequestDataException("getOrdersByDate.date", "Передана дата после текущей");
         List<Ordering> orderings = orderingRepo.findOrdersByDate(date);
         orderings.sort((o1, o2) -> o2.getId().compareTo(o1.getId()));
         return orderings;
@@ -206,7 +206,8 @@ public class OrderService {
         ordering.setCancelledAt(Timestamp.valueOf(LocalDateTime.now()));
         orderingRepo.save(ordering);
 
-        // TODO: доделать возврат продуктов на склад после отмены заказа
+        // TODO: доделать возврат продуктов на склад после отмены заказа,
+        //  переделать на связь с menuService
         stockService.cancelWriteOffProductsFromStock(ordering.getShoppingCarts());
     }
 

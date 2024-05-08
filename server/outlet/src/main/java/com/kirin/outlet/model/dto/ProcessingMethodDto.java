@@ -1,6 +1,5 @@
 package com.kirin.outlet.model.dto;
 
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -34,7 +33,6 @@ public class ProcessingMethodDto {
     /**
      * Описание (не обязательно)
      */
-    @Nullable
     @Size(max = 500)
     @Pattern(regexp = "^[A-Za-zА-ЯЁа-яё]{2,}" +
             "((([ /-]|(, ))?[\\dA-Za-zА-ЯЁа-яё]+\\.?)|(( \\()[\\dA-Za-zА-ЯЁа-яё]+\\.?\\)))*")

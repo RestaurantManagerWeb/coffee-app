@@ -29,7 +29,7 @@ public class ApiGatewayApplication {
      * Сначала получаем все определенные маршруты для сервисов с помощью бина
      * RouteDefinitionLocator, затем идентификатор (id) каждого маршрута и устанавливаем
      * его в качестве имени группы. В результате получаем список ресурсов OpenAPI
-     * по пути /v3/api-docs/{SERVICE_NAME}, например /v3/api-docs/outlet.
+     * по пути /v3/api-docs/{SERVICE_NAME}, например, /v3/api-docs/outlet.
      * @return список групп для Springdoc OpenAPI
      */
     @Bean
@@ -38,7 +38,7 @@ public class ApiGatewayApplication {
         List<RouteDefinition> definitions = locator.getRouteDefinitions().collectList().block();
         assert definitions != null;
         definitions.stream()
-                .filter(routeDefinition -> routeDefinition.getId().matches(".*-service"))
+                .filter(routeDefinition -> routeDefinition.getId().matches(".+-service"))
                 .forEach(routeDefinition -> {
                     String name = routeDefinition.getId().replaceAll("-service", "");
                     groups.add(GroupedOpenApi.builder()

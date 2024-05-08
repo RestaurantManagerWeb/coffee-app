@@ -3,7 +3,6 @@ package com.kirin.outlet.controller;
 import com.kirin.outlet.model.exception.ExceptionBody;
 import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
-// import com.kirin.outlet.model.exception.OrderTransactionException;
 import com.kirin.outlet.model.exception.ValidationExceptionBody;
 import com.kirin.outlet.model.exception.Violation;
 import jakarta.validation.ConstraintViolationException;
@@ -107,7 +106,8 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ValidationExceptionBody notReadableException(HttpMessageNotReadableException exception) {
         final List<Violation> violations =
-                List.of(new Violation("httpInputMessage", exception.getMessage()));
+                List.of(new Violation("notReadableException.exception.httpInputMessage",
+                        exception.getMessage()));
         return new ValidationExceptionBody(violations, 400, appName,
                 exception.getClass().getSimpleName());
     }
@@ -119,7 +119,7 @@ public class GlobalExceptionHandler {
     public void noResourceException(NoResourceFoundException exception) {
         if (exception.getMessage().equals("No static resource favicon.ico."))
             System.err.println(exception.getMessage());
-        else exception.printStackTrace();
+        else unknownException(exception);
     }
 
     /**

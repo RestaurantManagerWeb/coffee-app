@@ -5,13 +5,7 @@ server:
 spring:
   profiles:
     include:
-      - eclient
-    # from application-eclient.yaml and personnel-eclient.yaml if exists
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
+      - eclient # from application-eclient.yaml and outlet-eclient.yaml if exists
 
 springdoc:
   packagesToScan: com.kirin.outlet

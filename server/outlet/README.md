@@ -2,4 +2,4 @@
 
 ## Схема базы данных
 
-<img src="src/main/resources/static/SQL_Schema.PNG" alt="Схема SQL" width="900"/>
+<img src="SQL_Schema.PNG" alt="Схема SQL" width="900"/>

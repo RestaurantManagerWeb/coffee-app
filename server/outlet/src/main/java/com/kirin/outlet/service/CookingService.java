@@ -88,7 +88,6 @@ public class CookingService {
                 stockItem = item.getIngredient().getStockItem();
                 components.add(new RecipeCompositionDto(item, item.getIngredient().getName(),
                         stockItem != null && stockItem.getUnitMeasure().getId() == 3));
-                // TODO: ссылка на магические единицы измерения
             }
         }
         Collections.sort(components);
@@ -104,6 +103,19 @@ public class CookingService {
         List<SemiFinished> semiFinishedList = semiFinishedRepo.findAll();
         semiFinishedList.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
         return semiFinishedList;
+    }
+
+    /**
+     * Получение полуфабриката по ID.
+     *
+     * @param id уникальный идентификатор полуфабриката
+     * @return найденный полуфабрикат
+     */
+    public SemiFinished getSemiFinishedById(@Positive long id) {
+        Optional<SemiFinished> semiFinished = semiFinishedRepo.findById(id);
+        if (semiFinished.isEmpty())
+            throw new ItemNotFoundException("Полуфабрикат с ID = " + id + " не найден");
+        return semiFinished.get();
     }
 
     /**

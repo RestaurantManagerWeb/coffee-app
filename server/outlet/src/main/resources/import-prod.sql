@@ -1,4 +1,4 @@
--- не учитывается
+-- тестовые данные для профиля prod (без проверки через сервисы)
 
 -- unit_measure
 INSERT INTO unit_measure(name, symbol) VALUES ('масса', 'г');

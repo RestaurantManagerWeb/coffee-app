@@ -33,7 +33,7 @@ public class MenuController {
 
     private final MenuService menuService;
 
-    @Operation(summary = "Получение списка позиций меню",
+    @Operation(summary = "Получение списка неудаленных позиций меню",
             description = "Возвращает список неудаленных позиций меню")
     @GetMapping()
     public ResponseEntity<List<MenuItem>> getMenuItems() {
@@ -143,7 +143,7 @@ public class MenuController {
         return ResponseEntity.ok(menuService.createMenuItemWithProcessChart(dto));
     }
 
-    @Operation(summary = "Удаление группы меню",
+    @Operation(summary = "Удаление группы меню по ID",
             description = "Удаление группы меню и входящих позиций меню")
     @DeleteMapping("/group/{id}")
     public ResponseEntity<Void> deleteMenuGroup(
@@ -154,8 +154,8 @@ public class MenuController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @Operation(summary = "Удаление позиции меню",
-            description = "Мягкое удаление позиции меню и полное удаление связанной техкарты при наличии")
+    @Operation(summary = "Удаление позиции меню по ID",
+            description = "Мягкое удаление позиции меню")
     @DeleteMapping("/item/{id}")
     public ResponseEntity<Void> deleteMenuItem(
             @Parameter(name = "id", description = "MenuItem id", example = "1")

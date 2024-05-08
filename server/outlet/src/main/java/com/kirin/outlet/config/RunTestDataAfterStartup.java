@@ -11,9 +11,9 @@ import com.kirin.outlet.service.MenuService;
 import com.kirin.outlet.service.OrderService;
 import com.kirin.outlet.service.StockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +27,18 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class RunTestDataAfterStartup {
+public class RunTestDataAfterStartup implements ApplicationListener<ApplicationReadyEvent> {
+
+    /**
+     * Заданный в настройках профиль
+     */
+    @Value("${spring.cloud.config.profile}")
+    private String activeProfile;
+
+    /**
+     * Название активного профиля, при котором будут загружены тестовые данные
+     */
+    private final String testProfile = "dev";
 
     private final MenuService menuService;
 
@@ -43,13 +54,24 @@ public class RunTestDataAfterStartup {
 
     private final StockService stockService;
 
+    @Order(2)
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        if (activeProfile.equalsIgnoreCase(testProfile)) {
+            testDataMenuGroup();
+            testDataStockItem();
+            testDataProcessingMethod();
+            testDataIngredient();
+            testDataSemiFinished();
+            testDataMenuItem();
+            testDataOrdering();
+        }
+    }
+
     /**
      * Добавление тестовых групп меню
      */
-    @Profile("dev")
-    @Order(2)
-    @EventListener(ApplicationReadyEvent.class)
-    public void testDataMenuGroup() {
+    private void testDataMenuGroup() {
         menuService.createMenuGroup(new MenuGroupDto("Чай"));
         menuService.createMenuGroup(new MenuGroupDto("Покупные товары"));
         menuService.createMenuGroup(new MenuGroupDto("Сэндвичи"));
@@ -59,10 +81,7 @@ public class RunTestDataAfterStartup {
     /**
      * Добавление тестовых позиций на складе
      */
-    @Profile("dev")
-    @Order(3)
-    @EventListener(ApplicationReadyEvent.class)
-    public void testDataStockItem() {
+    private void testDataStockItem() {
         stockService.createStockItem(new StockItemDto("Лимон", 1));
         stockService.createStockItem(new StockItemDto("Чай черный листовой", 1));
         stockService.createStockItem(new StockItemDto("Черника с/м", 1));
@@ -100,10 +119,7 @@ public class RunTestDataAfterStartup {
     /**
      * Добавление тестовых методов обработки
      */
-    @Profile("dev")
-    @Order(4)
-    @EventListener(ApplicationReadyEvent.class)
-    public void testDataProcessingMethod() {
+    private void testDataProcessingMethod() {
         ingredientService.createProcessingMethod(new ProcessingMethodDto(
                 "без обработки", null));
         ingredientService.createProcessingMethod(new ProcessingMethodDto(
@@ -117,10 +133,7 @@ public class RunTestDataAfterStartup {
     /**
      * Добавление тестовых ингредиентов
      */
-    @Profile("dev")
-    @Order(5)
-    @EventListener(ApplicationReadyEvent.class)
-    public void testDataIngredient() {
+    private void testDataIngredient() {
         ingredientService.createIngredient(new IngredientDto("Вода питьевая", 1, 0, null));
         ingredientService.createIngredient(new IngredientDto("Лед", 1, 0, null));
         ingredientService.createIngredient(new IngredientDto("Лимон", 2, 12, 1L));
@@ -139,10 +152,7 @@ public class RunTestDataAfterStartup {
     /**
      * Добавление тестовых полуфабрикатов (с техкартой и списком рецептурных компонентов)
      */
-    @Profile("dev")
-    @Order(6)
-    @EventListener(ApplicationReadyEvent.class)
-    public void testDataSemiFinished() {
+    private void testDataSemiFinished() {
         cookingService.createSemiFinished(new SemiFinishedDto("Пюре ягодное",
                 new ProcessChartNewDto(500, null, "Замороженные ягоды, сахар и кипяток взбить до однородной массы в блендере, процедить через сито"),
                 List.of(new RecipeCompositionNewDto(BigDecimal.valueOf(110), 5L, null),
@@ -156,10 +166,7 @@ public class RunTestDataAfterStartup {
      * Добавление тестовых позиций меню, связанных с позицией на складе или техкартой
      * (с созданием техкарты и списка рецептурных компонентов)
      */
-    @Profile("dev")
-    @Order(7)
-    @EventListener(ApplicationReadyEvent.class)
-    public void testDataMenuItem() {
+    private void testDataMenuItem() {
         menuService.createMenuItemWithProcessChart(new MenuItemPCDto(
                 "Чай ягодный 300 мл", BigDecimal.valueOf(220), null, 1,
                 new ProcessChartNewDto(300, null, "Добавить в стакан гостя дольку лимона, заварку в одноразовом пакетике, ягодное пюре и кипяток. Хорошо перемешать и удалить заварку"),
@@ -192,10 +199,7 @@ public class RunTestDataAfterStartup {
     /**
      * Добавление тестовых заказов
      */
-    @Profile("dev")
-    @Order(8)
-    @EventListener(ApplicationReadyEvent.class)
-    public void testDataOrdering() {
+    private void testDataOrdering() {
         Ordering order = new Ordering(1L);
         order.setCreatedAt(Timestamp.valueOf("2024-01-15 14:22:23"));
         orderingRepo.save(order);

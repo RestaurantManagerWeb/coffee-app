@@ -46,7 +46,17 @@ public class CookingController {
         return ResponseEntity.ok(cookingService.getSemiFinishedProductsList());
     }
 
-    @Operation(summary = "Создание полуфабриката",
+    @Operation(summary = "Получение полуфабриката по ID",
+            description = "Возвращает информацию о полуфабрикате")
+    @GetMapping("/sf/{id}")
+    public ResponseEntity<SemiFinished> getSemiFinished(
+            @Parameter(name = "id", description = "SemiFinished id", example = "1")
+            @PathVariable("id") long id
+    ) {
+        return ResponseEntity.ok(cookingService.getSemiFinishedById(id));
+    }
+
+    @Operation(summary = "Создание полуфабриката (с техкартой)",
             description = "Возвращает созданный полуфабрикат")
     @PostMapping("/sf")
     public ResponseEntity<SemiFinished> createSemiFinished(
