@@ -1,0 +1,23 @@
+# Настройки подключения к встроенной базе данных H2 (профиль dev)
+spring:
+  datasource:
+    url: jdbc:h2:mem:outlet_db
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create # update, none
+    show-sql: true # показывать запросы в базу данных
+#    properties:
+#      hibernate:
+##        dialect: org.hibernate.dialect.H2Dialect
+#        format_sql: true # изменение формата вывода запросов в консоли
+
+# Пользовательский интерфейс встроенной базы данных
+  #  http://localhost:port/h2-ui
+  h2:
+    console:
+      enabled: true
+      path: /h2-ui # default /h2-console

@@ -1,21 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import Orders from './routes/orders';
 import { MantineProvider } from '@mantine/core';
-import Menu from './routes/menu';
-import Root from './routes/root';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Root />,
-    children: [
-      { path: 'orders', element: <Orders /> },
-      { path: 'menu', element: <Menu /> },
-    ],
-  },
-]);
+import { routeTree } from './routeTree.gen';
+
+const router = createRouter({ routeTree, context: { title: 'Coffee App' } });
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

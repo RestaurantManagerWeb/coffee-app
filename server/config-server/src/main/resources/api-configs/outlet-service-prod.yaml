@@ -1,0 +1,20 @@
+# Настройки подключения к базе данных PostgreSQL, работающей в контейнере (профиль prod)
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5435/outlet_db
+    driver-class-name: org.postgresql.Driver
+    username: sa
+    password: p
+  jpa:
+#    show-sql: true
+    hibernate:
+#      ddl-auto: update # при повторном запуске (без строк ниже)
+
+      ddl-auto: create # при первом запуске
+
+# параметры для импорта тестовых данных из файла в режиме create (можно отключить)
+#    defer-datasource-initialization: true
+#  sql:
+#    init:
+#      mode: always
+#      data-locations: classpath:import-prod.sql

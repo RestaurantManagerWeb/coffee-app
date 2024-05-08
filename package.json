@@ -1,0 +1,20 @@
+{
+  "name": "coffee-app",
+  "version": "1.0.0",
+  "scripts": {
+    "config": "cd server/config-server && mvnw spring-boot:run",
+    "server:eureka": "cd server/eureka-server && mvnw spring-boot:run",
+    "server:outlet": "cd server/outlet && mvnw spring-boot:run",
+    "server:gateway": "cd server/api-gateway && mvnw spring-boot:run",
+    "services": "wait-on tcp:8888 && run-p -l server:*",
+    "server": "run-p config services",
+    "postinstall": "cd client && npm ci",
+    "client": "cd client && npm run dev"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "npm-run-all": "^4.1.5",
+    "wait-on": "^7.2.0"
+  }
+}
