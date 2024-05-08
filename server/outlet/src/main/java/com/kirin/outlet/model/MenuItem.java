@@ -1,21 +1,57 @@
 package com.kirin.outlet.model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIdentityReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 
 /**
- * Позиция меню. Например, капучино 200 мл, капучино 300 мл
+ * Позиция меню
  */
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Data
-public class MenuItem {
+@NoArgsConstructor
+public class MenuItem extends SoftDeletes {
+
+    /**
+     * Конструктор для создания позиции меню, связанной со штучной позицией на складе.
+     *
+     * @param name        название позиции
+     * @param price       цена в рублях
+     * @param vat         НДС в %. По умолчанию 10%
+     * @param menuGroupId ID связанной группы меню
+     * @param stockItemId ID связанной позиции на складе
+     */
+    public MenuItem(String name, BigDecimal price, Integer vat, Integer menuGroupId, Long stockItemId) {
+        this.name = name;
+        this.price = price;
+        if (vat != null) this.vat = vat;
+        this.menuGroupId = menuGroupId;
+        this.stockItemId = stockItemId;
+    }
+
+    /**
+     * Конструктор для создания позиции меню, связанной с техкартой.
+     *
+     * @param name           название позиции
+     * @param price          цена в рублях
+     * @param vat            НДС в %. По умолчанию 10%
+     * @param processChartId ID связанной техкарты
+     * @param menuGroupId    ID связанной группы меню
+     */
+    public MenuItem(String name, BigDecimal price, Integer vat, Long processChartId, Integer menuGroupId) {
+        this.name = name;
+        this.price = price;
+        if (vat != null) this.vat = vat;
+        this.menuGroupId = menuGroupId;
+        this.processChartId = processChartId;
+    }
 
     /**
      * Уникальный идентификатор позиции меню
@@ -25,9 +61,9 @@ public class MenuItem {
     private Long id;
 
     /**
-     * Уникальное название позиции
+     * Название позиции
      */
-    @Column(nullable = false, unique = true, columnDefinition = "varchar(50)")
+    @Column(nullable = false, columnDefinition = "varchar(50)")
     private String name;
 
     /**
@@ -37,11 +73,11 @@ public class MenuItem {
     private BigDecimal price;
 
     /**
-     * НДС в %. По умолчанию 0%
+     * НДС в %. По умолчанию 10%
      */
-    @ColumnDefault(value = "0")
+    @ColumnDefault(value = "10")
     @Column(nullable = false, columnDefinition = "smallint")
-    private Integer vat = 0;
+    private Integer vat = 10;
 
     /**
      * Добавлена ли позиция в стоп-лист. По умолчанию false
@@ -51,43 +87,57 @@ public class MenuItem {
     private Boolean inStopList = false;
 
     /**
-     * Группа меню. Однонаправленная связь ManyToOne с сущностью группы меню.<br>
-     * Отображение в Json только ID группы меню ("menuGroupId": id)
+     * Группа меню. Однонаправленная связь ManyToOne с сущностью группы меню.
      */
-    @JsonProperty("menuGroupId")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @ToString.Exclude
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "menu_group_id", nullable = false,
+    @JoinColumn(name = "menu_group_id", insertable = false, updatable = false,
             foreignKey = @ForeignKey(name = "menu_item_mgid_fk"))
     private MenuGroup menuGroup;
 
     /**
-     * Позиция на складе (опционально).
-     * Однонаправленная связь OneToOne с сущностью позиции на складе.
-     * Каждое указанное значение должно быть уникальным. Если сущность позиции меню
-     * связана с технологической картой, то данная связь должна быть null.<br>
-     * Отображение в Json только ID позиции на складе ("stockItemId": id/null)
+     * Уникальный идентификатор связанной группы меню
      */
-    @JsonProperty("stockItemId")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    @OneToOne(fetch = FetchType.LAZY) // optional = true, unique
-    @JoinColumn(name = "stock_item_id", foreignKey = @ForeignKey(name = "menu_item_siid_fk"))
+    @Column(name = "menu_group_id")
+    private Integer menuGroupId;
+
+    /**
+     * Позиция на складе (опционально).
+     * Однонаправленная связь ManyToOne с сущностью позиции на складе. Значение должно
+     * быть уникальным среди неудаленных позиций меню. Если сущность позиции меню
+     * связана с технологической картой, то данная связь должна быть null.
+     */
+    @ToString.Exclude
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "stock_item_id", insertable = false, updatable = false,
+            foreignKey = @ForeignKey(name = "menu_item_siid_fk"))
     private StockItem stockItem;
 
     /**
-     * Технологическая карта (опционально).
-     * Однонаправленная связь OneToOne с сущностью технологической карты.
-     * Каждое указанное значение должно быть уникальным. Если сущность позиции меню
-     * связана с позицией на складе, то данная связь должна быть null.<br>
-     * Отображение в Json только ID техкарты ("processChartId": id/null)
+     * Уникальный идентификатор связанной позиции на складе
      */
-    @JsonProperty("processChartId")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    @OneToOne(fetch = FetchType.LAZY) // optional = true, unique
-    @JoinColumn(name = "process_chart_id", foreignKey = @ForeignKey(name = "menu_item_pcid_fk"))
+    @Column(name = "stock_item_id")
+    private Long stockItemId;
+
+    /**
+     * Технологическая карта (опционально).
+     * Однонаправленная связь ManyToOne с сущностью технологической карты.
+     * Значение должно быть уникальным среди неудаленных позиций меню. Если сущность
+     * позиции меню связана с позицией на складе, то данная связь должна быть null.
+     */
+    @ToString.Exclude
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "process_chart_id", insertable = false, updatable = false,
+            foreignKey = @ForeignKey(name = "menu_item_pcid_fk"))
     private ProcessChart processChart;
+
+    /**
+     * Уникальный идентификатор связанной техкарты
+     */
+    @Column(name = "process_chart_id")
+    private Long processChartId;
 
 }

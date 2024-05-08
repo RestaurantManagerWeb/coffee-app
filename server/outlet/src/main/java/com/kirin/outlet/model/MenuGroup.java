@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 import lombok.Data;
 
 /**
- * Группы меню. Например, кофе, чай, сэндвичи, покупные товары
+ * Группа меню
  */
 @Entity
 @Data
@@ -26,4 +26,5 @@ public class MenuGroup {
      */
     @Column(nullable = false, unique = true, columnDefinition = "VARCHAR(30)")
     private String name;
+
 }

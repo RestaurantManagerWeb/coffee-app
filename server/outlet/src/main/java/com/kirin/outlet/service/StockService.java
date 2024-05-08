@@ -1,65 +1,116 @@
 package com.kirin.outlet.service;
 
+import com.kirin.outlet.model.MenuItem;
+import com.kirin.outlet.model.ShoppingCart;
 import com.kirin.outlet.model.StockItem;
+import com.kirin.outlet.model.UnitMeasure;
+import com.kirin.outlet.model.dto.ShopCartItemDto;
+import com.kirin.outlet.model.dto.StockItemDto;
+import com.kirin.outlet.model.dto.StockItemQuantityDto;
+import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
-import com.kirin.outlet.repository.IngredientRepo;
-import com.kirin.outlet.repository.ProcessingMethodRepo;
+import com.kirin.outlet.repository.MenuItemRepo;
 import com.kirin.outlet.repository.StockItemRepo;
 import com.kirin.outlet.repository.UnitMeasureRepo;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 /**
- * Сервис для управления складом и списком доступных ингредиентов
+ * Сервис для управления складом
  */
+@Validated
 @Service
 @RequiredArgsConstructor
 public class StockService {
+
+    private final MenuItemRepo menuItemRepo;
 
     private final UnitMeasureRepo unitMeasureRepo;
 
     private final StockItemRepo stockItemRepo;
 
-    private final ProcessingMethodRepo processingMethodRepo;
-
-    private final IngredientRepo ingredientRepo;
-
     /**
-     * Принять поставку продуктов со склада. Если ключ в словаре ссылается на несуществующий
-     * ID позиции на складе или позиция штучная, а данные по количеству включают дробную часть,
+     * Принять поставку продуктов. Если ID позиции ссылается на несуществующий
+     * ID позиции на складе, или позиция штучная, а данные по количеству включают дробную часть,
      * то данный продукт не принимается на склад, а его ID записывается и отправляется обратно.
      *
-     * @param shipment поставляемые продукты (ID продукта : количество в г, мл или шт)
-     * @return список непринятых позиций, может быть пустым
+     * @param shipment поставляемые продукты (ID позиций на складе и добавляемое количество)
+     * @return список ID непринятых позиций, может быть пустым
      */
-    // acceptIncomingShipmentsOfGoods
-    public ArrayList<Long> acceptIncomingInventoryShipments(Map<Long, Double> shipment) {
-        ArrayList<Long> rejection = new ArrayList<>();
+    public List<Long> acceptIncomingInventoryShipments(
+            @NotEmpty List<@Valid StockItemQuantityDto> shipment
+    ) {
+        List<Long> rejection = new ArrayList<>();
         StockItem stockItem;
-        for (var item : shipment.entrySet()) {
-            // TODO: проверка на получение отрицательного количества
-            Optional<StockItem> sItem = stockItemRepo.findById(item.getKey());
+        for (StockItemQuantityDto item : shipment) {
+            Optional<StockItem> sItem = stockItemRepo.findById(item.getStockItemId());
             if (sItem.isPresent()) {
                 stockItem = sItem.get();
-                // TODO: ссылка на магические единицы измерения
-                if (stockItem.getUnitMeasure().getId() == 3 && item.getValue() % 1 != 0) {
-                    rejection.add(item.getKey());
+                if (stockItem.getUnitMeasure().getId() == 3 && item.getQuantity() % 1 != 0) {
+                    rejection.add(item.getStockItemId());
                 } else {
                     stockItem.setQuantity(
-                            stockItem.getQuantity().add(BigDecimal.valueOf(item.getValue())));
+                            stockItem.getQuantity().add(BigDecimal.valueOf(item.getQuantity())));
                     stockItemRepo.save(stockItem);
                 }
-            } else {
-                rejection.add(item.getKey());
-            }
+            } else rejection.add(item.getStockItemId());
         }
         return rejection;
+    }
+
+    /**
+     * Получение позиции на складе по ID.
+     *
+     * @param id уникальный идентификатор позиции на складе
+     * @return найденную позицию на складе
+     */
+    public StockItem getStockItemById(@Positive long id) {
+        Optional<StockItem> stockItem = stockItemRepo.findById(id);
+        if (stockItem.isEmpty())
+            throw new ItemNotFoundException("Позиция на складе с ID = " + id + " не найдена");
+        return stockItem.get();
+    }
+
+    /**
+     * Получение информации о единице измерения по ID.
+     *
+     * @param id уникальный идентификатор единицы измерения
+     * @return информацию о найденной единице измерения
+     */
+    public UnitMeasure getUnitMeasureById(@Positive int id) {
+        Optional<UnitMeasure> unitMeasure = unitMeasureRepo.findById(id);
+        if (unitMeasure.isEmpty())
+            throw new ItemNotFoundException("Единицы измерения с ID = " + id + " не найдены");
+        return unitMeasure.get();
+    }
+
+    /**
+     * Получение списка всех позиций на складе, отсортированного по имени.
+     *
+     * @return отсортированный список позиций на складе
+     */
+    public List<StockItem> getStockItemsList() {
+        List<StockItem> stockItems = stockItemRepo.findAll();
+        stockItems.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
+        return stockItems;
+    }
+
+    /**
+     * Получение списка всех единиц измерения.
+     *
+     * @return список единиц измерения
+     */
+    public List<UnitMeasure> getUnitsMeasureList() {
+        return unitMeasureRepo.findAll();
     }
 
     /**
@@ -71,59 +122,82 @@ public class StockService {
      * @param id    идентификатор продукта (товара) на складе
      * @param count количество для списания
      */
+    // TODO: не используется
     public void writeOffProduct(Long id, Double count) {
-        Optional<StockItem> sItem = stockItemRepo.findById(id);
-        if (sItem.isEmpty()) {
-            throw new ItemNotFoundException(
-                    "Не найдена позиция на складе с ID = " + id + ". Нельзя списать продукт");
-        }
-        sItem.get().setQuantity(
-                sItem.get().getQuantity().subtract(BigDecimal.valueOf(count)));
-        stockItemRepo.save(sItem.get());
+        StockItem sItem = getStockItemById(id);
+        sItem.setQuantity(sItem.getQuantity().subtract(BigDecimal.valueOf(count)));
+        stockItemRepo.save(sItem);
         // TODO: рассылка уведомлений о проблемах со складом
-        if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) == 0) {
+        if (sItem.getQuantity().compareTo(BigDecimal.ZERO) == 0) {
             System.err.printf("На складе закончилась позиция с ID = %d (%s)\n",
-                    id, sItem.get().getName());
-        } else if (sItem.get().getQuantity().compareTo(BigDecimal.ZERO) < 0) {
+                    id, sItem.getName());
+        } else if (sItem.getQuantity().compareTo(BigDecimal.ZERO) < 0) {
             System.err.println(new StringBuilder("Запасы позиции с ID = ")
                     .append(id)
                     .append(" (")
-                    .append(sItem.get().getName())
+                    .append(sItem.getName())
                     .append(") меньше 0 (")
-                    .append(sItem.get().getQuantity())
+                    .append(sItem.getQuantity())
                     .append(")"));
         }
-
     }
 
-    public void writeOffProductsFromStock(HashMap<Long, Integer> shoppingCartItems) {
+    public void writeOffProductsFromStock(List<ShopCartItemDto> shoppingCartItems) {
 
         System.out.println(">>>>> Продукты съели!");
 
 
-        // HashMap<Long, BigDecimal> stockItems = new HashMap<>();
-        // HashMap<Long, Integer> processCharts = new HashMap<>();
-        // Optional<MenuItem> menuItem;
-        // StockItem stockItem;
-        // ProcessChart processChart;
-        //
-        //
-        // for (OrderDto item : shoppingCartItems) {
-        //     menuItem = menuItemRepo.findById(item.getMenuItemId());
-        //     if (menuItem.isEmpty())
-        //         throw new ItemNotFoundException("Не найдена позиция меню с ID = " + item.getMenuItemId());
-        //     stockItem = menuItem.get().getStockItem();
-        //     processChart = menuItem.get().getProcessChart();
-        //     if (stockItem != null) {
-        //         stockItems.put(stockItem.getId(), BigDecimal.valueOf(item.getQuantity()));
-        //     } else if (processChart != null) {
-        //         processCharts.put(processChart.getId(), item.getQuantity());
-        //     } else throw new IncorrectDataInDatabaseException(
-        //             "MenuItem с ID=" + item.getMenuItemId() + " не связана со складом");
-        // }
-        // if (!processCharts.isEmpty()) {
-        //     HashMap<Long, BigDecimal> ingredients =
-        //             cookingService.calculateNecessaryIngrForCook(processCharts);
-        // }
     }
+
+    public void cancelWriteOffProductsFromStock(List<ShoppingCart> shoppingCarts) {
+
+        System.out.println(">>>>> Продукты вернули после отмены чека!");
+
+
+    }
+
+    /**
+     * Получение списка штучных позиций на складе, которые не связаны с неудаленными позициями
+     * меню. Список отсортирован по имени.
+     *
+     * @return список найденных позиций на складе
+     */
+    public List<StockItem> getFreeStockItems() {
+        List<StockItem> stockItems = stockItemRepo.findByUnitMeasureIdIs(3);
+        List<MenuItem> menuItems = menuItemRepo.findByStockItemIdIsNotNullAndDeletedAtIsNull();
+        List<Long> menuStockItems = menuItems.stream()
+                .mapToLong(item -> item.getStockItemId())
+                .boxed().toList();
+        return stockItems.stream()
+                .filter(item -> !menuStockItems.contains(item.getId()))
+                .sorted((o1, o2) -> o1.getName().compareTo(o2.getName())).toList();
+    }
+
+    /**
+     * Создание позиции на складе с нулевым запасом.
+     *
+     * @param dto данные об уникальном имени и ID единицы измерения
+     * @return созданная позиция на складе с присвоенным ID
+     */
+    public StockItem createStockItem(@Valid StockItemDto dto) {
+        checkUniqueStockItemName(dto.getName());
+        getUnitMeasureById(dto.getUnitMeasureId());
+
+        String name = Character.toUpperCase(dto.getName().charAt(0))
+                + dto.getName().substring(1);
+        return stockItemRepo.save(new StockItem(name, dto.getUnitMeasureId()));
+    }
+
+    /**
+     * Проверка на отсутствие в репозитории позиции на складе с указанным именем
+     * (игнорируя регистр).
+     *
+     * @param name проверяемое имя
+     */
+    private void checkUniqueStockItemName(String name) {
+        List<StockItem> items = stockItemRepo.findByNameIgnoreCase(name);
+        if (items.size() > 0) throw new IncorrectRequestDataException(
+                "checkUniqueStockItemName.name", "Имя позиции на складе не уникально");
+    }
+
 }

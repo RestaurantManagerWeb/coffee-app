@@ -17,7 +17,6 @@ spring:
         - id: outlet-service # -service для группировки в openapi (filter RouteDefinition)
           uri: lb://outlet-service
           predicates:
-#            - Path=/cook/**,/menu/**,/stock/**
             - Path=/outlet/**
           filters:
             - RewritePath=/outlet/(?<path>.*), /$\{path}

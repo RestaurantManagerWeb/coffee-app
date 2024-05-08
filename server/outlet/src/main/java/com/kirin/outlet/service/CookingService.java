@@ -1,34 +1,34 @@
 package com.kirin.outlet.service;
 
-import com.kirin.outlet.model.MenuGroup;
-import com.kirin.outlet.model.MenuItem;
 import com.kirin.outlet.model.ProcessChart;
 import com.kirin.outlet.model.RecipeComposition;
 import com.kirin.outlet.model.SemiFinished;
 import com.kirin.outlet.model.StockItem;
-import com.kirin.outlet.model.dto.CookItemDto;
-import com.kirin.outlet.model.dto.IngredientOfRecipeDto;
 import com.kirin.outlet.model.dto.ProcessChartDto;
-import com.kirin.outlet.model.exception.IncorrectDataInDatabaseException;
+import com.kirin.outlet.model.dto.ProcessChartNewDto;
+import com.kirin.outlet.model.dto.RecipeCompositionDto;
+import com.kirin.outlet.model.dto.RecipeCompositionNewDto;
+import com.kirin.outlet.model.dto.SemiFinishedDto;
+import com.kirin.outlet.model.exception.IncorrectRequestDataException;
 import com.kirin.outlet.model.exception.ItemNotFoundException;
 import com.kirin.outlet.repository.ProcessChartRepo;
 import com.kirin.outlet.repository.RecipeCompositionRepo;
 import com.kirin.outlet.repository.SemiFinishedRepo;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.CannotCreateTransactionException;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- * Сервис для создания и управления позициями меню, включая работу с техкартами,
- * полуфабрикатами и рецептурными компонентами
+ * Сервис для работы с техкартами, полуфабрикатами и рецептурными компонентами
  */
+@Validated
 @Service
 @RequiredArgsConstructor
 public class CookingService {
@@ -39,138 +39,180 @@ public class CookingService {
 
     private final RecipeCompositionRepo recipeCompositionRepo;
 
-    private final OrderService orderService;
+    private final IngredientService ingredientService;
 
     /**
      * Получение информации о техкарте и требуемых ингредиентах.
+     *
      * @param processChartId ID техкарты
      * @return объект с данными о техкарте и списком ингредиентов
      */
-    public ProcessChartDto getProcessChartInfo(Long processChartId) {
-        Optional<ProcessChart> processChart = processChartRepo.findById(processChartId);
-        if (processChart.isEmpty()) {
-            throw new ItemNotFoundException("Техкарта с ID = " + processChartId + " не найдена");
-        }
+    public ProcessChartDto getProcessChartInfo(@Positive long processChartId) {
+        ProcessChart processChart = getProcessChartById(processChartId);
+
+        List<RecipeComposition> recipeCompositions = processChart.getRecipeCompositions();
         ProcessChartDto pcDto = new ProcessChartDto();
-        pcDto.setProcessChart(processChart.get());
-        pcDto.setComponents(getRecipeCompositionInfo(processChart.get()));
+        pcDto.setProcessChart(processChart);
+        pcDto.setComponents(getRecipeCompositionInfo(recipeCompositions));
         return pcDto;
     }
 
     /**
-     * Получение информации о рецептурных компонентах (РК), требующихся для приготовления по
-     * техкарте с указанным ID: ID РК (ключ), название, масса нетто РК, для п/ф - ID техкарты,
-     * для ингредиента - является ли он штучным.
-     * @param processChart технологическая карта
-     * @return HashMap с информацией о рецептурных компонентах
+     * Получение техкарты по ID.
+     *
+     * @param id уникальный идентификатор техкарты
+     * @return найденная техкарта
      */
-    private Map<Long, IngredientOfRecipeDto> getRecipeCompositionInfo(ProcessChart processChart) {
-        Map<Long, IngredientOfRecipeDto> components = new HashMap<>();
-        List<RecipeComposition> recipeCompositions = processChart.getRecipeCompositions();
-        if (recipeCompositions.isEmpty()) {
-            throw new IncorrectDataInDatabaseException(
-                    "Для техкарты с ID = " + processChart.getId() + " не заданы рецептурные компоненты");
-        }
+    private ProcessChart getProcessChartById(long id) {
+        Optional<ProcessChart> processChart = processChartRepo.findById(id);
+        if (processChart.isEmpty())
+            throw new ItemNotFoundException("Техкарта с ID = " + id + " не найдена");
+        return processChart.get();
+    }
+
+    /**
+     * Получение информации о рецептурных компонентах, требующихся для приготовления по техкарте.
+     *
+     * @param recipeCompositions список рецептурных компонентов
+     * @return список с информацией о рецептурных компонентах, отсортированный по ID компонента
+     */
+    private List<RecipeCompositionDto> getRecipeCompositionInfo(
+            List<RecipeComposition> recipeCompositions
+    ) {
+        List<RecipeCompositionDto> components = new ArrayList<>();
         StockItem stockItem;
         for (RecipeComposition item : recipeCompositions) {
-            // TODO: ? проверять корректность ссылок на п/ф или ингредиент
             if (item.getSemiFinished() != null) {
-                components.put(item.getId(), new IngredientOfRecipeDto(
-                        item.getSemiFinished().getName(),
-                        item.getNetto().doubleValue(),
-                        item.getSemiFinished().getId()));
+                components.add(new RecipeCompositionDto(item, item.getSemiFinished().getName()));
             } else {
                 stockItem = item.getIngredient().getStockItem();
-                components.put(item.getId(), new IngredientOfRecipeDto(
-                        item.getIngredient().getName(),
-                        item.getNetto().doubleValue(),
+                components.add(new RecipeCompositionDto(item, item.getIngredient().getName(),
                         stockItem != null && stockItem.getUnitMeasure().getId() == 3));
-                // TODO: ссылка на магические единицы измерения
             }
         }
+        Collections.sort(components);
         return components;
     }
 
     /**
-     * Получение списка позиций меню и полуфабрикатов, для которых есть техкарта.
-     * Список разбит по группам, для каждой позиции указаны имя и ID техкарты.
-     * @return HashMap с информацией о названиях групп (ключ) и списком позиций,
-     * которые готовятся на предприятии
-     */
-    public Map<String, ArrayList<CookItemDto>> getProductionList() {
-        Map<String, ArrayList<CookItemDto>> cookItems = new HashMap<>();
-        cookItems.put("полуфабрикаты", getListOfSemiFinishedProducts());
-        cookItems.putAll(getListOfMenuItemWithProcessChart());
-        return cookItems;
-    }
-
-    /**
-     * Получение списка позиций меню, для которых есть техкарта.
-     * Список разбит по группам меню, для каждой позиции указаны имя и ID техкарты.
-     * @return HashMap с информацией о названиях групп (ключ) и списком позиций,
-     * которые готовятся на предприятии
-     */
-    private Map<String, ArrayList<CookItemDto>> getListOfMenuItemWithProcessChart() {
-        List<MenuItem> menuItems = orderService.getMenuItems();
-        Map<Integer, ArrayList<CookItemDto>> positions = new HashMap<>();
-        Integer key;
-        CookItemDto cookItem;
-        for (MenuItem item : menuItems) {
-            if (item.getProcessChart() != null) {
-                key = item.getMenuGroup().getId();
-                cookItem = new CookItemDto(item.getName(), item.getProcessChart().getId());
-                if (positions.containsKey(key))
-                    positions.get(key).add(cookItem);
-                else positions.put(key, new ArrayList<>(Arrays.asList(cookItem)));
-            }
-        }
-        return replaceMenuGroupIdWithName(positions);
-    }
-
-    /**
-     * Заменяет ID группы меню соответствующим названием группы
-     * @param positions HashMap с ID группы меню в качестве ключей
-     * @return HashMap с названиями групп меню в качестве ключей
-     */
-    private Map<String, ArrayList<CookItemDto>> replaceMenuGroupIdWithName(
-            Map<Integer, ArrayList<CookItemDto>> positions
-    ) {
-        List<MenuGroup> menuGroups = orderService.getMenuGroupsList();
-        HashMap<Integer, String> groupsName = new HashMap<>();
-        for (MenuGroup group : menuGroups) {
-            groupsName.put(group.getId(), group.getName());
-        }
-
-        Map<String, ArrayList<CookItemDto>> cookItems = new HashMap<>();
-        for (var position : positions.entrySet()) {
-            cookItems.put(groupsName.get(position.getKey()), position.getValue());
-        }
-        return cookItems;
-    }
-
-    /**
-     * Получение списка всех доступных полуфабрикатов с информацией о названии и ID техкарты.
+     * Получение списка полуфабрикатов, отсортированного по имени.
+     *
      * @return список с информацией о полуфабрикатах
      */
-    private ArrayList<CookItemDto> getListOfSemiFinishedProducts() {
+    public List<SemiFinished> getSemiFinishedProductsList() {
         List<SemiFinished> semiFinishedList = semiFinishedRepo.findAll();
-        ArrayList<CookItemDto> cookItems = new ArrayList<>();
-        for (SemiFinished product : semiFinishedList) {
-            cookItems.add(new CookItemDto(
-                    product.getName(), product.getProcessChart().getId()));
-        }
-        return cookItems;
+        semiFinishedList.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
+        return semiFinishedList;
     }
 
-    // public HashMap<Long, BigDecimal> calcNecessaryIngrForCook(
-    //         @NonNull HashMap<Long, Integer> processCharts) {
-    //     Optional<ProcessChart> processChart;
-    //     for (Long pcId : processCharts.keySet()) {
-    //         processChart = processChartRepo.findById(pcId);
-    //
-    //     }
-    //
-    //
-    //     return null;
-    // }
+    /**
+     * Получение полуфабриката по ID.
+     *
+     * @param id уникальный идентификатор полуфабриката
+     * @return найденный полуфабрикат
+     */
+    public SemiFinished getSemiFinishedById(@Positive long id) {
+        Optional<SemiFinished> semiFinished = semiFinishedRepo.findById(id);
+        if (semiFinished.isEmpty())
+            throw new ItemNotFoundException("Полуфабрикат с ID = " + id + " не найден");
+        return semiFinished.get();
+    }
+
+    /**
+     * Проверка данных и создание нового полуфабриката и его техкарты со списком
+     * рецептурных компонентов.
+     *
+     * @param dto данные для создания полуфабриката, техкарты и рецептурных компонентов
+     * @return объект созданного полуфабриката
+     */
+    public SemiFinished createSemiFinished(@Valid SemiFinishedDto dto) {
+        checkUniqueSemiFinishedName(dto.getName());
+        checkCorrectRecipeCompositions(dto.getRecipeCompositions());
+        try {
+            return createSemiFinishedAndProcessChart(dto);
+        } catch (Exception e) {
+            throw new CannotCreateTransactionException(
+                    "Не удалось создать полуфабрикат. " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Транзакция. Создание связанных техкарты, рецептурных компонентов и полуфабриката.
+     *
+     * @param dto данные для создания объектов
+     * @return объект созданного полуфабриката
+     */
+    @Transactional
+    private SemiFinished createSemiFinishedAndProcessChart(SemiFinishedDto dto) {
+        long pcId = createProcessChartAndRecipeCompositions(
+                dto.getProcessChart(), dto.getRecipeCompositions());
+        String name = Character.toUpperCase(dto.getName().charAt(0))
+                + dto.getName().substring(1);
+        return semiFinishedRepo.save(new SemiFinished(name, pcId));
+    }
+
+    /**
+     * Проверка на отсутствие в репозитории полуфабриката с указанным именем
+     * (игнорируя регистр).
+     *
+     * @param name проверяемое имя
+     */
+    private void checkUniqueSemiFinishedName(String name) {
+        List<SemiFinished> items = semiFinishedRepo.findByNameIgnoreCase(name);
+        if (items.size() > 0) throw new IncorrectRequestDataException(
+                "checkUniqueSemiFinishedName.name", "Имя полуфабриката не уникально");
+    }
+
+    /**
+     * Проверка наличия ингредиентов и полуфабрикатов, указанных в качестве рецептурных компонентов.
+     *
+     * @param recipeCompositions список с данными для создания рецептурных компонентов
+     */
+    public void checkCorrectRecipeCompositions(List<RecipeCompositionNewDto> recipeCompositions) {
+        Set<Long> ingredientsId = new HashSet<>();
+        Set<Long> semiFinishedId = new HashSet<>();
+        for (RecipeCompositionNewDto rc : recipeCompositions) {
+            if (rc.getIngredientId() != null)
+                ingredientsId.add(rc.getIngredientId());
+            else semiFinishedId.add(rc.getSemiFinishedId());
+        }
+        if (!ingredientsId.isEmpty())
+            ingredientService.checkPresentAllIngredientsById(ingredientsId);
+        if (!semiFinishedId.isEmpty())
+            checkPresentAllSemiFinishedById(semiFinishedId);
+    }
+
+    /**
+     * Проверка наличия всех указанных полуфабрикатов по их ID.
+     *
+     * @param idSet множество ID полуфабрикатов для проверки
+     */
+    private void checkPresentAllSemiFinishedById(Set<Long> idSet) {
+        List<SemiFinished> semiFinishedList = semiFinishedRepo.findByIdIn(idSet);
+        if (semiFinishedList.size() < idSet.size()) {
+            idSet.removeAll(semiFinishedList.stream()
+                    .mapToLong(SemiFinished::getId)
+                    .boxed().collect(Collectors.toSet()));
+            throw new ItemNotFoundException("Не найдены полуфабрикаты с ID = " + idSet);
+        }
+    }
+
+    /**
+     * Создание техкарты и связанных рецептурных компонентов.
+     *
+     * @param processChart       данные для создания техкарты
+     * @param recipeCompositions данные для создания рецептурных компонентов
+     * @return ID созданной техкарты
+     */
+    public long createProcessChartAndRecipeCompositions(
+            ProcessChartNewDto processChart, List<RecipeCompositionNewDto> recipeCompositions
+    ) {
+        ProcessChart newPC = processChartRepo.save(new ProcessChart(processChart.getDescription(),
+                processChart.getYield(), processChart.getPortion()));
+        for (RecipeCompositionNewDto rc : recipeCompositions) {
+            recipeCompositionRepo.save(new RecipeComposition(newPC.getId(), rc.getNetto(),
+                    rc.getIngredientId(), rc.getSemiFinishedId()));
+        }
+        return newPC.getId();
+    }
 }
