@@ -1,33 +1,122 @@
-# Дипломный проект
+# Приложение для кофейни
 
-## Тема
+## Описание
 
-**_Разработка веб-приложения для небольшой кофейни с реализацией ограниченного ассортимента
-продукции общественного питания с возможностью подключения нескольких филиалов одной сети._**
+Приложение для автоматизации работы кофейни на уровне предприятия. 
 
-## Настройки проекта (Settings)
+Доступный функционал:
 
-Maven project<br>
+* создание заказов
+* работа с меню
+* информация о технологических картах
+* информация о складе
+
+## Установка
+
+### Сервер
+
 JDK: Amazon Corretto 17 (corretto-17)<br>
-Language level: 17 (SDK default)<br>
-Настройки запуска: .runConfigurations/runAll.run.xml
+Language level: 17<br>
 
-Микросервисы (в порядке запуска):
+#### Выбор профиля
 
-1. config-server - сервер для хранения настроек всех микросервисов (Spring Cloud Config)
-2. eureka-server - сервер Eureka для обнаружения микросервисов (Spring Cloud Netflix - Eureka Server)
-3. outlet-service - сервис для работы с заказами на предприятии
-4. api-gateway - сервис для переадресации запросов от клиентского приложения микросервисам
+* DEV (по умолчанию) - база данных H2
+* PROD - база данных [PostgreSQL](README.md#профили)
 
-Обращение к сервисам через `http://localhost:8765/{service_name}/{path}`
+### Клиент (опционально)
 
-## Документация Springdoc OpenAPI (Swagger)
+Установить [Node.js (LTS)](https://nodejs.org/en) 
 
-[springdoc-openapi:swagger](http://localhost:8765/swagger-ui.html)
+Установка библиотек: 
+```shell
+npm ci
+```
 
-## Eureka server
+## Варианты запуска
 
-[eureka-server](http://localhost:8761/)
+### Сервер
+
+#### Запуск в IntelliJ IDEA
+
+Настройки в файле `.runConfigurations/runAll.run.xml`
+
+Выбрать конфигурацию `runAll` и запустить проект
+
+#### Запуск через NPM (Node.js)
+
+```shell
+npm run server
+```
+
+#### Ручной запуск (Windows)
+
+1. config-server
+
+```shell
+cd server\config-server 
+```
+```shell
+.\mvnw spring-boot:run
+```
+
+2. eureka-server
+
+```shell
+cd server\eureka-server 
+```
+```shell
+.\mvnw spring-boot:run
+```
+
+3. outlet-service
+
+```shell
+cd server\outlet 
+```
+```shell
+.\mvnw spring-boot:run
+```
+
+4. api-gateway
+
+```shell
+cd server\api-gateway 
+```
+```shell
+.\mvnw spring-boot:run
+```
+
+### Клиент (опционально)
+
+```shell
+npm run client
+```
+
+## Использование
+
+### Документация Springdoc OpenAPI (Swagger)
+
+http://localhost:8765/swagger-ui.html
+
+### Веб-интерфейс базы данных H2 (profile DEV)
+
+http://localhost:8081/h2-ui/
+
+### Eureka server
+
+http://localhost:8761/
+
+### Клиент
+
+http://localhost:5173/
+
+## Устранение неполадок
+
+### Failed to load API definition
+
+<img src="swagger-error.png" alt="Failed to load API definition" width="400"/>
+
+Перезапустить страницу через 20-60 секунд.
 
 ## Профили
 
@@ -37,11 +126,7 @@ Language level: 17 (SDK default)<br>
 `spring.cloud.config.profile=dev`<br>
 `spring.cloud.config.profile=prod`
 
-### Profile dev: База данных H2
-
-[Пользовательский интерфейс для БД Outlet](http://localhost:8081/h2-ui/)
-
-### Profile prod: Создание Docker контейнера с postgresql
+### Создание Docker контейнера с PostgreSQL
 
 Создание контейнера на порту 5435
 
@@ -59,172 +144,4 @@ docker exec -it psql-cafe psql -U sa outlet_db
 
 ```shell
 psql -U sa -d outlet_db
-```
-
-## Доступные endpoints
-
-### outlet-service (тестовые данные)
-
-1. [(POST) /order](http://localhost:8765/outlet/order) - получение ID заказа.
-   Записать информацию о заказе в базу и рассчитать расход сырья.
-
-```json
-{
-  "receiptId": 8,
-  "shoppingCartItems": [
-    {
-      "menuItemId": 1,
-      "quantity": 2
-    },
-    {
-      "menuItemId": 2,
-      "quantity": 1
-    },
-    {
-      "menuItemId": 3,
-      "quantity": 1
-    }
-  ]
-}
-```
-
-2. [(POST) /menu/group](http://localhost:8765/outlet/menu/group) - создание новой группы меню
-
-```json
-{
-  "name": "кофе"
-}
-```
-
-3. [(POST) /menu/item/stock](http://localhost:8765/outlet/menu/item/stock) - создание позиции меню, связанной
-   с позицией на складе
-
-```json
-{
-  "name": "вода н/г 0.5 л, пластик",
-  "price": 100,
-  "vat": null,
-  "menuGroupId": 2,
-  "stockItemId": 12
-}
-```
-
-```json
-{
-  "name": "Зерно Бразилия, 250 г",
-  "price": 750,
-  "vat": 20,
-  "menuGroupId": 2,
-  "stockItemId": 13
-}
-```
-
-4. [(POST) /stock/shipment](http://localhost:8765/outlet/stock/shipment) - принятие
-   новой поставки продуктов. Данные: ID позиции на складе в outlet (StockItem, Long),
-   количество в штуках (без дробной части), миллилитрах или граммах (Double).
-   Возвращает список непринятых позиций (ID позиции).
-
-```json
-[
-  {
-    "stockItemId": 1,
-    "quantity": 49
-  },
-  {
-    "stockItemId": 3,
-    "quantity": 215.5
-  },
-  {
-    "stockItemId": 6,
-    "quantity": 12
-  }
-]
-```
-
-5. [(POST) /stock](http://localhost:8765/outlet/stock) - создание новой позиции на складе
-
-```json
-{
-  "name": "сыр творожный сливочный",
-  "unitMeasureId": 1
-}
-```
-
-6. [(POST) /ingr](http://localhost:8765/outlet/ingr) - создание нового ингредиента
-
-```json
-{
-  "name": "молотый кофе, Бразилия",
-  "processingMethodId": 4,
-  "weightLoss": 3,
-  "stockItemId": 14
-}
-```
-
-7. [(POST) /ingr/pm](http://localhost:8765/outlet/ingr/pm) - создание нового метода обработки
-
-```json
-{
-  "name": "выпекание",
-  "description": null
-}
-```
-
-8. [(POST) /cook/sf](http://localhost:8765/outlet/cook/sf) - создание нового полуфабриката
-
-```json
-{
-  "name": "лимонный сок",
-  "processChart": {
-    "description": "Лимонный фреш.",
-    "yield": 100,
-    "portion": 1
-  },
-  "recipeCompositions": [
-    {
-      "netto": 160,
-      "ingredientId": 3,
-      "semiFinishedId": null
-    }
-  ]
-}
-```
-
-9. [(POST) /menu/item/pc](http://localhost:8765/outlet/menu/item/pc) - создание новой позиции меню, связанной
-   с техкартой
-
-```json
-{
-  "name": "лимонад с лимоном и огурцом",
-  "price": 180,
-  "vat": 10,
-  "menuGroupId": 4,
-  "processChart": {
-    "description": "Насыпать лед, положить дольку лимона и нарезанный слайсами огурец, залить минералкой.",
-    "yield": 300,
-    "portion": 1
-  },
-  "recipeCompositions": [
-    {
-      "netto": 150,
-      "ingredientId": 2,
-      "semiFinishedId": null
-    },
-    {
-      "netto": 20,
-      "ingredientId": 3,
-      "semiFinishedId": null
-    },
-    {
-      "netto": 30,
-      "ingredientId": 10,
-      "semiFinishedId": null
-    },
-    {
-      "netto": 130,
-      "ingredientId": 13,
-      "semiFinishedId": null
-    }
-  ]
-}
 ```
